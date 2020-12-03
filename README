@@ -1,0 +1,42 @@
+To execute MidPy architecture, you must have installed:
+	1 - PyDev for eclipse - http://www.vogella.com/tutorials/Python/article.html
+	2 - numpy (http://www.numpy.org/):  pip install numpy
+	3 - intall igraph (https://igraph.org/python/), pip install python-igraph
+	4 - GFortran (https://gcc.gnu.org/fortran/)
+	5 - BLAS (http://www.netlib.org/blas/), LAPACK (http://www.netlib.org/lapack/) 
+		5.1 - Mac OS: https://pheiter.wordpress.com/2012/09/04/howto-installing-lapack-and-blas-on-mac-os/
+		5.2 - Windows: http://ylzhao.blogspot.com.br/2013/10/blas-lapack-precompiled-binaries-for.html
+		5.3 - Linux: sudo apt-get install libblas-dev liblapack-dev gfortran
+	6 - Pyro4 (https://pythonhosted.org/Pyro4/): pip install pyro4
+		6.1 - to build applications in which objects can talk to each other over the network
+	7 - pandas (https://pandas.pydata.org/): pip install pandas
+    8 - sklearn (http://scikit-learn.org/stable/): pip install sklearn 
+    9 - rebuild libyael.so to adapting for your plataform
+		9.1 - To do this, open a terminal and execute following steps: 
+			9.1.1 - Go to yael folder on MidPy project and execute make clean
+			9.1.2 - Execute make command to generate the libyael.so
+			9.1.3 - copy libyael.so to applications > libraries > x64 to 64 bits compiler or x86 to 32 bits
+	10 - tensorflow - (https://www.tensorflow.org/api_docs): pip install tensorflow
+	11 - keras      - (https://keras.io/): pip install keras 
+	12 - imbalanced-learn - (https://imbalanced-learn.org): pip install imbalanced-learn
+	13 - matplotlib       - (https://matplotlib.org/users/installing.html) pip install matplotlib	
+			
+			
+General:
+    - insert in PYTHONPATH the MidPy path 
+    
+	- configure IP and hostname properly on machines of the cluster
+	 
+	- configure the ssh on all machines to connect without the password or use a unique user and password to connecting with all
+
+	- The buffer of cache is generated in cache/buffer folder.
+		- To use it, a wrapper involved with its configuration (see <test folder>/slave) must be modified
+	
+	- Applications have support by applications folder. In this folder, there are some items 
+	that we considered importants to manipulate algorithms and generate, if necessary, buffers.
+	
+		- An important point is that extension libraries how, C ou C++, must be compiled according to 
+		respective architectures and saved in the correct folder in applications libraries  folder ->  <libraries -> x86 or x64>.
+		
+	- pqnns libraries were compiled on linux kernel x64 and using specific modules (blas and parlack). 
+	  To execute it, you have to install all dependencies. To do this, use explanation 3 above 
