@@ -3,9 +3,10 @@ from containers.wrapper.wrappers import LibraryWrapper
 from utils import package_builder, package_extractor
 
 import cv2
+import time
 from ctypes import *
 import numpy as np
-import pbcvt
+import pbcvt as nscale
 
 from subprocess import Popen, PIPE
 
@@ -24,13 +25,7 @@ class NSCALE(BaseWorkerInfo):
         # minSizeSeg/maxSizeSeg: Tamanhos mínimos e máximos, em pixels, que podem ser identificados como núcleos. Pode usar como valor inicial 10/5000.
         # fillHolesConnectivity: 4 ou 8, representando quais pixels devem ser considerados para realizar a operação de fillHoles. Usando 8 o custo computacional aumenta. Pode usar como valor inicial 4.
         # reconConnectivity:  4 ou 8, representando quais pixels devem ser considerados para realizar a operação de seleção de núcleos. Usando 8 o custo computacional aumenta. Pode usar como valor inicial 4.
-        
-        #stdcpp= cdll.LoadLibrary("libstdc++.so.6")
-        
-        #out = Popen(args="nm ../../lib/x64/libsegment.so", shell=True, stdout=PIPE).communicate()[0].decode("iso-8859-1")
-        #attrs = [i.split(" ")[-1].replace("\r", "") for i in out.split("\n") if " T " in i]
-        #functions = [i for i in attrs if hasattr(lib, i)]
-        #print(functions)
+        # watershedConnectivity 4 ou 8 
         
         #prepare inputs
         img = cv2.imread(task[0])
@@ -38,14 +33,37 @@ class NSCALE(BaseWorkerInfo):
         blue  = task[1]
         green = task[2]
         red   = task[3]
-        T1    = task[4]
-        T2    = task[4]
-
-        args = (blue, green, red, T1, T2)
-
-        pbcvt.segmentNucleiStg1Py(img, args)
-
         
+        T1    = task[4]
+        T2    = task[5]
+
+        G1    = task[6]
+        G2    = task[7]
+
+        minSize = task[8]
+        maxSize = task[9]
+
+        minSizePl = task[10]
+
+        minSizeSeg = task[11]
+        maxSizeSeg = task[12]
+
+        fillHolesConnectivity = task[13]
+        reconConnectivity     = task[14]
+        watershedConnectivity = task[15]
+
+        rbc, bgr                            = nscale.segmentNucleiStg1Py(img, (blue, green, red, T1, T2,))
+        brg, rc, rc_recon, rc_open          = nscale.segmentNucleiStg2Py(bgr, (reconConnectivity,))
+        rc, rc_recon, rc_open, bw1, diffIm  = nscale.segmentNucleiStg3Py([rc, rc_recon, rc_open], (fillHolesConnectivity, G1,))
+        bw1, bw1_t                          = nscale.segmentNucleiStg4Py(bw1, (minSize, maxSize,))
+        diffIm, bw1_t, rbc, seg_open        = nscale.segmentNucleiStg5Py([diffIm, bw1_t, rbc], (G2,))
+        seg_open, seg_nonoverlap            = nscale.segmentNucleiStg6Py([img, seg_open], (minSizePl, watershedConnectivity,))
+        seg_nonoverlap, output              = nscale.segmentNucleiStg7Py(seg_nonoverlap, (minSizeSeg, maxSizeSeg, fillHolesConnectivity,))
+
+        cv2.imwrite(task[16], output)
+        self.times['cache'] = time.time()
+
+        return [0,0]
         
 
 
