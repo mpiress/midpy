@@ -1,24 +1,22 @@
-import numpy as np
 import pandas as pd
 from containers.descriptor.reader import BaseReaderDescriptor
 from containers.descriptor.cache import BaseCacheDescriptor
-
-import time
       
 class ReaderDescriptor(BaseReaderDescriptor):
     def __init__(self, path):
         super(ReaderDescriptor, self).__init__(path)
-        self.__task_dimensionality = 6
         self.dataFrame = None
         self.index     = None
+        self.task_dim  = 0
         self.load()
 
     def get_task_dimensionality(self):
-        return self.__task_dimensionality
+        return self.task_dim
 
     def load(self):
         self.dataFrame = pd.read_csv(self.path, header=None)
         self.index     = self.dataFrame.index.tolist()
+        self.task_dim  = self.dataFrame.shape[1]
         
     def sizeof(self):
         return self.dataFrame.shape[0]
@@ -40,9 +38,15 @@ class ReaderDescriptor(BaseReaderDescriptor):
 
 
 class CacheDescriptor(BaseCacheDescriptor):
+    
     def processing(self, task):
-        rules = [[task[0]]]
-        for t in task[1:]:
-            rules.append(rules[-1] + [t])
-        del(rules[0])
+        #['blue', 'green', 'red', 'T1', 'T2', 'G1', 'G2', 'minSize', 'maxSize', 'minSizePl', 'minSizeSeg', 'maxSizeSeg', 'fillHoles', 'recon', 'water']
+        rules = [(task[0], task[1], task[2], task[3], task[4],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13], task[12], task[5],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13], task[12], task[5], task[7], task[8],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13], task[12], task[5], task[7], task[8], task[6],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13], task[12], task[5], task[7], task[8], task[6], task[9], task[14],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13], task[12], task[5], task[7], task[8], task[6], task[9], task[14],),\
+                 (task[0], task[1], task[2], task[3], task[4], task[13], task[12], task[5], task[7], task[8], task[6], task[9], task[14], task[10], task[11],)]
         return rules

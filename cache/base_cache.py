@@ -41,6 +41,7 @@ class Cache:
         self.times              = {'cache': 0}
         self.hits               = 0
         self.missing            = 0
+        self.time               = 0
         
         #used to compose metrics investigation 
         self.task_cache         = set()

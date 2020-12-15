@@ -139,6 +139,8 @@ class SIAMESE():
         for line in df.itertuples():
             Y.append(line[3])
             
+        print('BEFORE:', Counter(Y))
+
         IDX_Y = Counter(Y)
         quantiles = mquantiles(list(IDX_Y.values()))
         qmin      = math.floor(quantiles[0]) 
@@ -150,12 +152,14 @@ class SIAMESE():
         Y = []
         
         for line in df.itertuples():
-            if line[3] in IDX_Y and IDX_Y[line[3]] <= qmax:
+            if line[3] in IDX_Y and IDX_Y[line[3]] <= qmax and line[3] > 0:
                 X += self.__descriptor.read_pair_of_tasks(line[1], line[2])
                 Y.append(line[3])
                 Y.append(line[3])
                 IDX_Y[line[3]] += 1
  
+        print('AFTER:', Counter(Y))
+
         self.__descriptor.clear_all()
         
         le = preprocessing.LabelEncoder()
@@ -168,6 +172,7 @@ class SIAMESE():
 
         data = self.__randomOverSample(X, Y, qmax)
             
+        
         trainX = []
         trainY = []
         testX  = []
@@ -228,7 +233,7 @@ class SIAMESE():
             plt.plot(data['acc'], label='train')
             plt.plot(data['val_acc'], label='test')
             plt.legend()
-            plt.savefig(constants.BUFFERNN + self.__job + '_accuracy_'+str(self.__nhidden[0])+'_'+str(self.__ext)+'.png')
+            plt.savefig(constants.BUFFERNN + self.__job + '_accuracy_'+str(self.__nhidden[0])+'.png')
             plt.close()
         
 

@@ -29,6 +29,7 @@ from core.managers.worker import Worker
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, CacheWrapper
 from containers import constants
 from core.network.pipes import lookup
+from collections import Counter
 
 import socket, time, csv
 import pandas as pd
@@ -66,7 +67,7 @@ class BaseWorker:
 
     def __cache_analyser(self):
         lasttask = []
-        tasks    = {'t1':[], 't2':[], 'similarity':[]}
+        Y = []
 
         print('[INFO]: Worker ', self.__id_worker, ' started with ', self.__job.cache.size(), ' rules cached') if self.__isverbose else None
         task = self.__tasks.get()
@@ -82,15 +83,16 @@ class BaseWorker:
             tmp = self.__job.cache.get_task_rules()
 
             if lasttask:
-                value = round(len(tmp & lasttask[1])/len(tmp), 2)
+                value = len(tmp & lasttask[1])/len(tmp)
                 self.__train_nn.put({'t1':lasttask[0], 't2':task[0], 'similarity':value}, self.__id_worker)
+                Y.append(value)
                 
             lasttask = (task[0], tmp)
             task = self.__tasks.get()
             print('[INFO]: TEMPO: ', time.time() - t1)
 
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
-
+        print(Counter(Y))
 
     def __execute_tasks(self):
         sworkload = 0
@@ -119,14 +121,15 @@ class BaseWorker:
                 value = round(len(tmp & lasttask[1])/len(tmp), 2) if len(tmp) > 0 else 0.0 
                 self.__task_similarity[key] = (value, self.__job.cache.get_discards())
                 self.__output['evaluate_cache_similarity'] = (time.time() - t2) if 'evaluate_cache_similarity' not in self.__output else (self.__output['evaluate_cache_similarity'] + (time.time() - t2))           
-                
+                #print('PAIR:', value)
+
             lasttask = (task, tmp)
             task = self.__tasks.get()
             self.__job.cache.clear_evaluations()
             
         self.__output['worker_runtime']         = time.time() - start
         self.__output['size_of_work']           = sworkload
-        self.__output['tasks_runtime']          = ttmp - self.__job.times['cache']
+        self.__output['tasks_runtime']          = ttmp - self.__job.cache.time
         self.__output['times']                  = self.__job.times
         self.__output['size_of_cache']          = self.__job.cache.size()
         self.__output['number_of_rules']        = self.__job.cache.get_missing()

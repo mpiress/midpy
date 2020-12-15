@@ -42,13 +42,13 @@ class config:
     BASE_FILE_NAME          = 'nscale'
     PATH_DATASET            = '../../../datasets/nscale/'
 
-    TRAIN_NEURAL_NETWORK    = False
+    TRAIN_NEURAL_NETWORK    = True
     
-    TEST                    = PATH_DATASET+BASE_FILE_NAME+'.csv'
-    TRAIN                   = None
+    TEST                    = PATH_DATASET+BASE_FILE_NAME+'.train'
+    TRAIN                   = PATH_DATASET+BASE_FILE_NAME+'.train'
     OUTPUT_PATH             = 'results/'
     
-    SIZE_OF_CHUNK           = [1]
+    SIZE_OF_CHUNK           = [2]
     SCHEDULERS              = [RoundRobin]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
@@ -61,5 +61,5 @@ class config:
 
     @staticmethod
     def get_job():
-        job = NSCALE()
+        job = NSCALE('/home/michel/Doutorado/datasets/nscale/imgs/image1.png', '/home/michel/Doutorado/datasets/nscale/imgs/output.png')
         return job

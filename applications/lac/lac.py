@@ -83,9 +83,7 @@ class LAC(BaseWorkerInfo):
             
             for c in combination:
 
-                t1 = time.time()
                 rule = self.cache.get(c)
-                self.times['cache'] = (time.time() - t1) if 'cache' not in self.times else (self.times['cache'] + (time.time() - t1))
                 
                 if rule == -1:
                     tx = time.time()
@@ -111,18 +109,14 @@ class LAC(BaseWorkerInfo):
                         
                         if (rule in rules):
                             misses += 1
-                            t1 = time.time()
                             self.cache.set(rule, rules[rule])
-                            self.times['cache'] = (time.time() - t1) if 'cache' not in self.times else (self.times['cache'] + (time.time() - t1))
 
                     self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
                         
                 else:
                     hits += 1
-                    t1 = time.time()
                     for c,v in rule.items():
                         score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
-                    self.times['cache'] = (time.time() - t1) if 'cache' not in self.times else (self.times['cache'] + (time.time() - t1))
                     
         #if you have that return results, using variable c
         c = max(score.items(), key=lambda item:item[1][1]) 
@@ -131,7 +125,7 @@ class LAC(BaseWorkerInfo):
         
 
     def execute_task(self, task):
-        result = [0,0]
+        hits, missing = [0,0]
         itemset = OrderedDict()
         
         task, classe = list(enumerate(task[0:-1])), task[-1]
@@ -143,13 +137,13 @@ class LAC(BaseWorkerInfo):
         if len(itemset) > 0:
 
             t1 = time.time()
-            result = self.__getRules(itemset, classe)
+            hits, missing = self.__getRules(itemset, classe)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
             
-        self.info_cache['hits'] += result[0]
-        self.info_cache['missing'] += result[1]
+        self.info_cache['hits'] += hits
+        self.info_cache['missing'] += missing
                                         
-        return result
+        return [hits, missing]
         
 
         

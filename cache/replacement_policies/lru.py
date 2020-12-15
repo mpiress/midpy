@@ -26,6 +26,7 @@
 """
 
 from cache.base_cache import Cache
+import time
 
 class LRU(Cache):
 
@@ -36,11 +37,13 @@ class LRU(Cache):
     def get(self, key):
         if self.capacity > 0:
             try:
+                t1 = time.time()
                 v = self.cache[key]
                 self.cache.move_to_end(key, last=False)
                 self.add_used_rules(key)
                 self.task_cache.add(key)
                 self.hits += 1
+                self.time += (time.time() - t1)
                 return v
             except:
                 return -1
@@ -48,6 +51,7 @@ class LRU(Cache):
 
     def set(self, key, value):
         
+        t1 = time.time()
         self.task_cache.add(key)
         
         if self.capacity > 0:
@@ -66,6 +70,7 @@ class LRU(Cache):
                     print('[INFO]: maximum cache space in rules quantity:', self.size())
                     self.__isverbose = False
             self.missing += 1
+        self.time += (time.time() - t1)
                 
     
     
