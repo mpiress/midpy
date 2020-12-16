@@ -60,7 +60,7 @@ class WorkflowManager:
     def taskmanager_init(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, output, isverbose=False):
         if self.__master == None:
             self.__conn = conn
-            self.init_server_name(conn)
+            self.init_server_name(conn) 
             waiting_named_server(conn, isverbose)
             self.__master = BaseMaster(conn, workload, schell, descriptor, isverbose)
         self.__times['orchestrator_runtime'], self.__times['taskmanager_runtime'] = self.__master.processing(output)
@@ -79,8 +79,8 @@ class WorkflowManager:
             self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
         self.__times['workerpool_runtime'] = self.__slave.processing()
         
-        generate_wid.put(self.__id_worker)
-        self.__id_worker = None
+        #generate_wid.put(self.__id_worker)
+        #self.__id_worker = None
 
         return True
         

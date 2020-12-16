@@ -56,7 +56,7 @@ class LookupWids:
     
     def __init__(self, nworkers):
         self.__wids         = Queue()
-        self.__initialize   = 0
+        self.__nworkers     = nworkers
         [self.__wids.put(wid) for wid in range(nworkers)]
         self.serializer = Pyro4.util.get_serializer(Pyro4.config.SERIALIZER)
 
@@ -66,18 +66,8 @@ class LookupWids:
     
     @Pyro4.expose
     def get(self):
-        self.__initialize += 1
         return self.__wids.get()
-    
-    @Pyro4.expose
-    def initialize(self):
-        return self.__initialize
-    
-    @Pyro4.expose
-    def finalize(self):
-        self.__initialize = 0
 
-    
 
 
 @Pyro4.behavior(instance_mode="single")

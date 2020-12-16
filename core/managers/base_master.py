@@ -48,8 +48,9 @@ class BaseMaster():
         self.__descriptor = descriptor
         
         #remote objects
-        self.__qresults = ResultQueues(conn.nworkers)
-        self.__wids    = LookupWids(conn.nworkers)
+        self.__qresults         = ResultQueues(conn.nworkers)
+        self.__wids             = LookupWids(conn.nworkers)
+        self.__resp             = LookupWids(conn.nworkers)
         self.__workers_queues   = {wid:TaskQueues() for wid in range(self.__conn.nworkers)}
         
         prefix = 'global.queues.'
@@ -77,7 +78,9 @@ class BaseMaster():
     def get_daemons(self):
         return self.__daemons
     
-    def get_results(self, wid, output, runtime, hits, missing, nworkers):
+    def get_results(self, wid, output):
+        runtime, hits, missing = 0,0,0
+
         data = self.__qresults.get(wid)
         with open(output[0], 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=' ')    
@@ -112,15 +115,14 @@ class BaseMaster():
                             for key, value in job_times.items():
                                 writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with ' + str(key) + ' runtime:' + str(value)])
             
-            if nworkers == self.__conn.nworkers:
-                writer.writerow(['#'])
-
         return runtime, hits, missing
     
     
-    def get_nn_results(self, wid, tasks):
+    def get_nn_results(self, wid):
+        tasks = []
         while(not self.__data_train_nn.empty(wid)):
             tasks.append(self.__data_train_nn.get(wid))
+        return tasks
             
 
     def generate_header(self, metrics, output):
@@ -134,37 +136,43 @@ class BaseMaster():
     
     def processing(self, output):
         runtime, hits, missing, nworkers = 0, 0, 0, 0
-        tasks = [] if self.__workload.train_neural_network else None
-
+        
         t1 = time.time()
         metrics = self.__start_scheduler()
         self.generate_header(metrics, output) if not self.__workload.train_neural_network else None
         print('[INFO]: waiting for queries to be processed') if self.__isverbose else None
         
-        generate_wid = lookup(conn=self.__conn, uri='global.queues.lookup_wids')
-        while generate_wid.initialize() < self.__conn.nworkers:
-            time.sleep(1)
+        if self.__workload.train_neural_network:
+            tasks = []
+            with futures.ThreadPoolExecutor(max_workers=4) as executor:
+                pool = {executor.submit(self.get_nn_results, wid) : wid for wid in range(self.__conn.nworkers)}
 
-        while nworkers < self.__conn.nworkers:
-            wid = generate_wid.get()
-            nworkers += 1
+            for feature in futures.as_completed(pool):
+                tasks += feature.result()
+                nworkers += 1
+
+            df = pd.DataFrame(tasks, columns=['t1', 't2', 'similarity'])
+            df['similarity'] = pd.factorize(df.similarity)[0]
+            df.to_csv(constants.BUFFERNN+self.__workload.job_name+'_train.csv', index=None)
+
+        else:
+            with futures.ThreadPoolExecutor(max_workers=4) as executor:
+                pool = {executor.submit(self.get_results, wid, output) : wid for wid in range(self.__conn.nworkers)} 
+
+            for feature in futures.as_completed(pool):
+                data = feature.result()
+                runtime += data[0]
+                hits    += data[1]
+                missing += data[2]
+                nworkers += 1
             
-            if self.__workload.train_neural_network:
-                self.get_nn_results(wid, tasks)
-                if nworkers == self.__conn.nworkers:
-                    df = pd.DataFrame(tasks, columns=['t1', 't2', 'similarity'])
-                    df['similarity'] = pd.factorize(df.similarity)[0]
-                    df.to_csv(constants.BUFFERNN+self.__workload.job_name+'_train.csv', index=None)
-
-            else:  
-                 runtime, hits, missing = self.get_results(wid, output, runtime, hits, missing, nworkers)
-                 
+            with open(output[0], 'a', newline='') as csvfile:
+                writer = csv.writer(csvfile, delimiter=' ')
+                writer.writerow(['#'])
 
         if not self.__workload.train_neural_network:
             print('[INFO]: total execution time in ', runtime, ' with ', hits, 'hits on the cache with ', missing, ' distinct rules stored') if self.__isverbose else None   
             print('[INFO]: global task queue processed') if self.__isverbose else None
         
-        generate_wid.finalize()
-
         return metrics['schell_runtime'], time.time() - t1
             

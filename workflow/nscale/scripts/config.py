@@ -48,8 +48,8 @@ class config:
     TRAIN                   = PATH_DATASET+BASE_FILE_NAME+'.train'
     OUTPUT_PATH             = 'results/'
     
-    SIZE_OF_CHUNK           = [16, 64, 256, 1024]
-    SCHEDULERS              = [NNSCHELLBYKCLUSTERS]
+    SIZE_OF_CHUNK           = [20] #[16, 64, 256, 1024]
+    SCHEDULERS              = [RoundRobin, NNSCHELLBYKCLUSTERS]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
