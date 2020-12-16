@@ -42,19 +42,19 @@ class config:
     BASE_FILE_NAME          = 'nscale'
     PATH_DATASET            = '../../../datasets/nscale/'
 
-    TRAIN_NEURAL_NETWORK    = True
+    TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+BASE_FILE_NAME+'.train'
+    TEST                    = PATH_DATASET+BASE_FILE_NAME+'.test'
     TRAIN                   = PATH_DATASET+BASE_FILE_NAME+'.train'
     OUTPUT_PATH             = 'results/'
     
-    SIZE_OF_CHUNK           = [2]
-    SCHEDULERS              = [RoundRobin]
+    SIZE_OF_CHUNK           = [16, 64, 256, 1024]
+    SCHEDULERS              = [NNSCHELLBYKCLUSTERS]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 74250000
-    CACHE_CAPACITY          = [100]
+    CACHE_FULL_SIZE         = 8439
+    CACHE_CAPACITY          = [0.25, 0.5, 1.0, 1.25]
     
     SERVER_PORT             = 32010
     NWORKERS                = 1

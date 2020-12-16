@@ -34,15 +34,19 @@ from containers import constants
 class SchedulerManager(BaseManager):
     
     def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, isverbose=True):
+        self.descriptor         = descriptor
+        self.descriptor.load()
+
         self.conn               = conn
         self.workload           = workload
         self.isverbose          = isverbose
-        self.descriptor         = descriptor
         self.sizeof             = self.descriptor.sizeof()
         self.metrics            = {'schell_runtime':0, 'generate_train_nn':0, 'workload':self.sizeof, 'workload_wid':{wid:[] for wid in range(self.conn.nworkers)}}
         self.size_of_chunk      = 0
         self.__workers_queues   = workers_queues
         self.__dataindex        = 0
+
+        
         
         
     def get_metrics(self):

@@ -243,7 +243,7 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
     
     def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
         super(NNSCHELLBYKCLUSTERS, self).__init__(conn, workload, tasks, descriptor, isverbose)
-        self.__maxcent      = 0.05 
+        self.__maxcent      = 0.10 
         self.__mincent      = 4
         self.__kcentroids   = 0 
         self.__centlimit    = 25     
@@ -294,6 +294,7 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
             t1 = time.time()
             data = self.DFS(graph, self.size_of_chunk, chunk)    
             self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
+            print(data)
             
             t1 = time.time()
             self.assign_tasks(data, self.workload.mod_or_div)

@@ -75,6 +75,7 @@ class BaseWorker:
         while task[0] != 'EXIT':
             t1 = time.time()
             rules = self.__cache_descriptor.processing(task[1])
+            
             for r in rules:
                 tmp = self.__job.cache.get(r)
                 if tmp == -1:
@@ -85,11 +86,11 @@ class BaseWorker:
             if lasttask:
                 value = len(tmp & lasttask[1])/len(tmp)
                 self.__train_nn.put({'t1':lasttask[0], 't2':task[0], 'similarity':value}, self.__id_worker)
-                Y.append(value)
-                
+                print('t1:', len(lasttask[1]), 't2:', len(tmp), 'value:', value)
+    
             lasttask = (task[0], tmp)
             task = self.__tasks.get()
-            print('[INFO]: TEMPO: ', time.time() - t1)
+            #print('[INFO]: TEMPO: ', time.time() - t1)
 
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
         print(Counter(Y))

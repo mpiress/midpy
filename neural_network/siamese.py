@@ -44,6 +44,8 @@ from scipy.stats.mstats import mquantiles
 from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 
+from imblearn.over_sampling import RandomOverSampler
+
 class SIAMESE():
 
 
@@ -139,39 +141,46 @@ class SIAMESE():
         for line in df.itertuples():
             Y.append(line[3])
             
-        print('BEFORE:', Counter(Y))
-
         IDX_Y = Counter(Y)
+        print('AFTER:', IDX_Y)
+        
         quantiles = mquantiles(list(IDX_Y.values()))
-        qmin      = math.floor(quantiles[0]) 
-        qmax      = math.ceil(quantiles[-1])
-
-        IDX_Y = {idx:0 for idx in IDX_Y.keys() if IDX_Y[idx] > qmin}
+        qmax      = math.ceil(quantiles[0])/2
+        
+        IDX_Y = {idx:0 for idx in IDX_Y.keys()}
         
         X = []
         Y = []
         
         for line in df.itertuples():
-            if line[3] in IDX_Y and IDX_Y[line[3]] <= qmax and line[3] > 0:
+            if line[3] in IDX_Y and IDX_Y[line[3]] <= qmax:
                 X += self.__descriptor.read_pair_of_tasks(line[1], line[2])
                 Y.append(line[3])
                 Y.append(line[3])
                 IDX_Y[line[3]] += 1
  
-        print('AFTER:', Counter(Y))
-
         self.__descriptor.clear_all()
         
         le = preprocessing.LabelEncoder()
         le.fit(Y)
         Y = le.transform(Y)
+
+        smt = RandomOverSampler(random_state=42)
+        X, Y = smt.fit_resample(X, Y)
+        data = {y:[] for y in set(Y)}
+        for t1, t2, y in zip(X[0::2], X[1::2], Y[0::2]):
+            data[y].append(t1)
+            data[y].append(t2)
         
+        print('BEFORE:', Counter(Y))
+
         scaler = MinMaxScaler()
         scaler.fit(X)
         X = scaler.transform(X)
 
-        data = self.__randomOverSample(X, Y, qmax)
-            
+        #data = self.__randomOverSample(X, Y, qmax)
+        #print('BEFORE:', Counter(Y))
+   
         
         trainX = []
         trainY = []
@@ -235,6 +244,8 @@ class SIAMESE():
             plt.legend()
             plt.savefig(constants.BUFFERNN + self.__job + '_accuracy_'+str(self.__nhidden[0])+'.png')
             plt.close()
+
+            self.__descriptor.load()
         
 
     def predict(self, t1, t2): 

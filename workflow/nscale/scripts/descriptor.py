@@ -8,7 +8,6 @@ class ReaderDescriptor(BaseReaderDescriptor):
         self.dataFrame = None
         self.index     = None
         self.task_dim  = 0
-        self.load()
 
     def get_task_dimensionality(self):
         return self.task_dim
