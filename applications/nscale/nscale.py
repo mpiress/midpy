@@ -42,10 +42,14 @@ class NSCALE(BaseWorkerInfo):
     
     def __segmentNuclei(self, img, blue, green, red, T1, T2, G1, G2, minSize, maxSize, minSizePl, minSizeSeg, maxSizeSeg, fillHoles, recon, water):
         hits, missing = 0, 0
+        s1, s2, s3, s4, s5, s6, s7 = 0,0,0,0,0,0,0 
 
         rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,))
+        
         if rule == -1:
             missing += 1
+
+            s1 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2,))
             if rule == -1:
                 missing += 1
@@ -54,7 +58,9 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 rbc, bgr = rule
+            s1 = time.time() - s1
 
+            s2 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2, recon,))
             if rule == -1:
                 missing += 1
@@ -63,7 +69,9 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 bgr, rc, rc_recon, rc_open = rule
+            s2 = time.time() - s2
             
+            s3 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1,))
             if rule == -1:
                 missing += 1
@@ -72,7 +80,9 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 rc, rc_recon, rc_open, bw1, diffIm = rule
-
+            s3 = time.time() - s3
+            
+            s4 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize,))
             if rule == -1:
                 missing += 1
@@ -81,7 +91,9 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 bw1, bw1_t = rule 
+            s4 = time.time() - s4
 
+            s5 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2,))
             if rule == -1:
                 missing += 1
@@ -90,7 +102,9 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 diffIm, bw1_t, rbc, seg_open = rule
-
+            s5 = time.time() - s5
+            
+            s6 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water,))
             if rule == -1:
                 missing += 1
@@ -99,7 +113,9 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 seg_open, seg_nonoverlap = rule
+            s6 = time.time() - s6
 
+            s7 = time.time()
             rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,))
             if rule == -1:
                 missing += 1
@@ -108,11 +124,14 @@ class NSCALE(BaseWorkerInfo):
             else:
                 hits += 1
                 output = rule
+            s7 = time.time() - s7
         
         else:
             hits += 1
             output = rule
 
+        #print('TEMPOS:: S1:', s1, ' S2:', s2, ' S3:', s3, ' S4:', s4, ' S5:', s5, ' S6:', s6, ' S7:', s7)
+        
         return [hits, missing, output]
 
     

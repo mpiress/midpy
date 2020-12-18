@@ -120,8 +120,12 @@ class BaseMaster():
     
     def get_nn_results(self, wid):
         tasks = []
-        while(not self.__data_train_nn.empty(wid)):
-            tasks.append(self.__data_train_nn.get(wid))
+        
+        t = self.__data_train_nn.get(wid)
+        while(t != 'EXIT'):
+            tasks.append(t)
+            t = self.__data_train_nn.get(wid)
+        
         return tasks
             
 
@@ -152,7 +156,6 @@ class BaseMaster():
                 nworkers += 1
 
             df = pd.DataFrame(tasks, columns=['t1', 't2', 'similarity'])
-            df['similarity'] = pd.factorize(df.similarity)[0]
             df.to_csv(constants.BUFFERNN+self.__workload.job_name+'_train.csv', index=None)
 
         else:

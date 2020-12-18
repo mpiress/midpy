@@ -100,37 +100,14 @@ class SIAMESE():
         
         self.__model = tf.keras.Model(inputs=[T1, T2], outputs=pred)
         
-        self.__model.compile(optimizer=tf.keras.optimizers.Adam(lr=self.__lr, amsgrad=True), loss='categorical_crossentropy', metrics=['acc'])
+        self.__model.compile(optimizer=tf.keras.optimizers.Adam(lr=self.__lr, amsgrad=True), loss='sparse_categorical_crossentropy', metrics=['acc'])
         
 
         return self.__model
 
     
-    def __randomOverSample(self, X, Y, qmax):
-
-        data = {y:[] for y in Counter(Y).keys()}
-        for t1, t2, y in zip(X[0::2], X[1::2], Y[0::2]):
-            data[y].append(t1)
-            data[y].append(t2)
-
-        np.random.seed(42)
-        for key in data:
-            sizeof = len(data[key])
-            if sizeof < qmax:
-                overSamples = np.random.randint(sizeof, size=qmax-sizeof)
-                for idx in overSamples:
-                    if idx % 2 == 0:
-                        data[key].append(data[key][idx])
-                        data[key].append(data[key][idx+1])
-                    else:
-                        data[key].append(data[key][idx-1])
-                        data[key].append(data[key][idx])
-        
-        return data
-
-
-
     def __get_train_and_test(self):
+        scaler = MinMaxScaler()
 
         if not os.path.exists(constants.BUFFERNN+self.__job+'_train.csv'):
             print('[ERROR]: The training set is not saved in the buffer folder')
@@ -142,7 +119,6 @@ class SIAMESE():
             Y.append(line[3])
             
         IDX_Y = Counter(Y)
-        print('AFTER:', IDX_Y)
         
         quantiles = mquantiles(list(IDX_Y.values()))
         qmax      = math.ceil(quantiles[0])/2
@@ -164,23 +140,13 @@ class SIAMESE():
         le = preprocessing.LabelEncoder()
         le.fit(Y)
         Y = le.transform(Y)
-
+        
         smt = RandomOverSampler(random_state=42)
         X, Y = smt.fit_resample(X, Y)
         data = {y:[] for y in set(Y)}
         for t1, t2, y in zip(X[0::2], X[1::2], Y[0::2]):
             data[y].append(t1)
             data[y].append(t2)
-        
-        print('BEFORE:', Counter(Y))
-
-        scaler = MinMaxScaler()
-        scaler.fit(X)
-        X = scaler.transform(X)
-
-        #data = self.__randomOverSample(X, Y, qmax)
-        #print('BEFORE:', Counter(Y))
-   
         
         trainX = []
         trainY = []
@@ -227,8 +193,8 @@ class SIAMESE():
         
         else:
             
-            trainY = to_categorical(trainY)
-            testY  = to_categorical(testY)
+            #trainY = to_categorical(trainY)
+            #testY  = to_categorical(testY)
             
             t1 = time.time() 
             cp = tf.keras.callbacks.ModelCheckpoint(checkpoint, verbose=0, save_weights_only=True, period=self.__epochs)

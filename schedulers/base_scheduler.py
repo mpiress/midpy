@@ -42,7 +42,7 @@ class SchedulerManager(BaseManager):
         self.isverbose          = isverbose
         self.sizeof             = self.descriptor.sizeof()
         self.metrics            = {'schell_runtime':0, 'generate_train_nn':0, 'workload':self.sizeof, 'workload_wid':{wid:[] for wid in range(self.conn.nworkers)}}
-        self.size_of_chunk      = 0
+        self.size_of_chunk      = workload.overview['chunk']
         self.__workers_queues   = workers_queues
         self.__dataindex        = 0
 

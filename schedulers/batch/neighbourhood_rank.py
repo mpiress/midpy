@@ -103,7 +103,7 @@ class NeighborhoodRank(SchedulerManager):
             workload += len(chunk)
             
             self.__evaluated_model(chunk, inputset)
-            data = list(map(lambda x: [x[0], x[1]], sorted(inputset, key=lambda x:(x[2],x[1]), reverse=True)))
+            data = list(map(lambda x: [x[0], x[1]], sorted(inputset, key=lambda x: x[2], reverse=True)))
             self.assign_tasks(data, div)
         
         self.set_exit()

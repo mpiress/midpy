@@ -31,7 +31,7 @@ from schedulers.batch.round_robin import RoundRobin
 from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS
+from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE
 
 from cache.replacement_policies.lru import LRU
 
@@ -44,22 +44,22 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+BASE_FILE_NAME+'.test'
+    TEST                    = PATH_DATASET+'pylogs/moat_s225_p20s.log'
     TRAIN                   = PATH_DATASET+BASE_FILE_NAME+'.train'
     OUTPUT_PATH             = 'results/'
     
-    SIZE_OF_CHUNK           = [20] #[16, 64, 256, 1024]
-    SCHEDULERS              = [RoundRobin, NNSCHELLBYKCLUSTERS]
+    SIZE_OF_CHUNK           = [240] #[16, 64, 256, 1024]
+    SCHEDULERS              = [RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 8439
-    CACHE_CAPACITY          = [0.25, 0.5, 1.0, 1.25]
+    CACHE_FULL_SIZE         = 1095
+    CACHE_CAPACITY          = [0.75] #[0.75, 1.0, 1.25, 1.5]
     
     SERVER_PORT             = 32010
     NWORKERS                = 1
 
     @staticmethod
     def get_job():
-        job = NSCALE('/home/michel/Doutorado/datasets/nscale/imgs/image1.png', '/home/michel/Doutorado/datasets/nscale/imgs/output.png')
+        job = NSCALE('/home/michel/Doutorado/datasets/nscale/imgs/image5.tiff', '/home/michel/Doutorado/datasets/nscale/imgs/output.png')
         return job

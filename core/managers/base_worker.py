@@ -67,8 +67,7 @@ class BaseWorker:
 
     def __cache_analyser(self):
         lasttask = []
-        Y = []
-
+        
         print('[INFO]: Worker ', self.__id_worker, ' started with ', self.__job.cache.size(), ' rules cached') if self.__isverbose else None
         task = self.__tasks.get()
         
@@ -87,13 +86,13 @@ class BaseWorker:
                 value = len(tmp & lasttask[1])/len(tmp)
                 self.__train_nn.put({'t1':lasttask[0], 't2':task[0], 'similarity':value}, self.__id_worker)
                 print('t1:', len(lasttask[1]), 't2:', len(tmp), 'value:', value)
-    
-            lasttask = (task[0], tmp)
+                
+            lasttask = (task[0], tmp, task[1])
             task = self.__tasks.get()
             #print('[INFO]: TEMPO: ', time.time() - t1)
 
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
-        print(Counter(Y))
+        self.__train_nn.put('EXIT', self.__id_worker)
 
     def __execute_tasks(self):
         sworkload = 0

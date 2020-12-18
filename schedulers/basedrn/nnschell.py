@@ -35,7 +35,7 @@ import time
 
 from collections import OrderedDict
 from sklearn.cluster import KMeans
-from yellowbrick.cluster import KElbowVisualizer
+from itertools import combinations
 
 import sys
 sys.setrecursionlimit(10000)
@@ -139,54 +139,13 @@ class BASENNSCHELL(SchedulerManager):
     
     
 class NNSCHELLBYSIGNATURE(BASENNSCHELL):
-
+    
     def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, isverbose=True):
         
         super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, workers_queues, descriptor, isverbose)
         self.__kcentroids   = 1
-        self.__signatures   = {}      
-
-    def predict(self):
-        workload = 0
-
-        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
-        
-        start = time.time()
-        while workload < self.sizeof:
-            data = []
-            chunk = OrderedDict(self.get_chunk()) 
-            workload += self.size_of_chunk
-            sizeof = self.sizeof_by_worker()
-
-            if len(self.__signatures) == 0:
-                tasks = list(chunk.items())[0:self.conn.nworkers]
-                for key, value in tasks:
-                    self.__signatures[key] = value
-            
-            t1, t2, idx = self.combinations(chunk, self.__signatures)
-            pred = self.model.predict(t1, t2)
-            edges = list(sorted(zip(pred, idx), key=lambda x:x[0], reverse=True))
-            graph = self.generate_graph(edges)
-            self.__signatures = {}
-            for wid in range(self.conn.nworkers):
-                data += self.DFS(graph, sizeof[wid], chunk)
-                self.__signatures[data[-1][0]] = data[-1][1]
-
-            self.assign_tasks(data, self.workload.mod_or_div)
-
-        self.set_exit()
-        self.metrics['schell_runtime'] = time.time() - start        
-        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
-                
-    
-    
-class NNSCHELLTASKBYTASK(BASENNSCHELL):
-    
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, isverbose=True):
-        
-        super(NNSCHELLTASKBYTASK, self).__init__(conn, workload, workers_queues, descriptor, isverbose)
-        self.__kcentroids   = 1
-        self.__signatures   = {wid:{} for wid in range(self.conn.nworkers)}     
+        self.__sizeoftasks  = 1
+        self.__signatures   = {}     
     
     def predict(self):
         workload = 0
@@ -201,31 +160,29 @@ class NNSCHELLTASKBYTASK(BASENNSCHELL):
             data = {wid:[] for wid in range(self.conn.nworkers)}
             
             if len(self.__signatures) == 0:
+                self.__signatures = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
                 for wid in range(min(len(chunk), self.conn.nworkers)):
-                    task = chunk.pop()
+                    task = chunk.popitem()
                     data[wid].append(task)
                     self.__signatures[wid][task[0]] = task[1]
 
             while chunk:
 
                 for wid in range(min(len(chunk), self.conn.nworkers)):
-                    
                     t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
-                    pred = self.model.predict(t1, t2)
-                    task = list(sorted(zip(pred, idx), key=lambda x:x[0], reverse=True))
-                    task = task.pop(0)[1][1]
-                    task = (task, chunk.pop(task))
-   
-                    data[wid].append(task)
+                    pred = list(zip(self.model.predict(t1, t2), idx))
+                    edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
+                    for _ in range(min(self.__sizeoftasks, len(chunk))):
+                        task = edges.pop(0)[1][0]
+                        task = (task, chunk.pop(task))
+                        data[wid].append(task)
 
-                    if len(self.__signatures[wid]) < self.__kcentroids:
-                        self.__signatures[wid][task[0]] = task[1]
-                    
-                    else:
-                        tmp = list(self.__signatures[wid].items())
-                        tmp.pop(0)
-                        self.__signatures[wid] = dict(tmp)
-                        self.__signatures[wid][task[0]] = task[1]
+                        if len(self.__signatures[wid]) < self.__kcentroids:
+                            self.__signatures[wid][task[0]] = task[1]
+                        
+                        else:
+                            self.__signatures[wid].popitem()
+                            self.__signatures[wid][task[0]] = task[1]
                     
             chunk = []
             for wid in (range(self.conn.nworkers)):
@@ -246,7 +203,7 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
         self.__maxcent      = 0.10 
         self.__mincent      = 4
         self.__kcentroids   = 0 
-        self.__centlimit    = 25     
+        self.__centlimit    = 50     
 
 
     #estimate based in elbow curve 
@@ -261,16 +218,17 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
         inertia = []
         model = KMeans()
         maxcent = max(math.ceil(self.size_of_chunk*self.__maxcent), self.__mincent)
-        for k in range(self.__mincent, maxcent):
-            kmeans = KMeans(n_clusters=k, random_state=42).fit(list(chunk.values()))
-            inertia.append(kmeans.inertia_)
-        k = self.__elbow_method(inertia)
+        if maxcent > self.__mincent:
+            for k in range(self.__mincent, maxcent):
+                kmeans = KMeans(n_clusters=k, random_state=42).fit(list(chunk.values()))
+                inertia.append(kmeans.inertia_)
+        k = self.__elbow_method(inertia) if maxcent > self.__mincent else self.__mincent
         return k
     
 
     def predict(self):
         workload = 0
-        tschell  = 0
+        
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         start = time.time()
@@ -278,11 +236,11 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
             chunk = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
             
-            t1 = time.time()
-            self.__kcentroids = min(max(math.ceil(self.size_of_chunk*self.__maxcent), self.__mincent), self.__centlimit) #self.__estimante_nclusters(chunk) 
-            print('[INFO]: Number of centroids:', self.__kcentroids, ' predicted in ', time.time() - t1, ' secs.')
-
             tp = time.time()
+            if ((self.__kcentroids == 0) or ((self.size_of_chunk < self.workload.overview['chunk']) and (self.__kcentroids > self.size_of_chunk/2))):
+                self.__kcentroids = 25 #self.__estimante_nclusters(chunk) #min(max(math.ceil(self.size_of_chunk*self.__maxcent), self.__mincent), self.__centlimit)
+                print('[INFO]: Number of centroids:', self.__kcentroids)
+            
             centroids = dict(list(chunk.items())[0:self.__kcentroids])
             t1, t2, idx = self.combinations(chunk, dict(centroids))
             pred = list(zip(self.model.predict(t1, t2), idx))
@@ -294,7 +252,48 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
             t1 = time.time()
             data = self.DFS(graph, self.size_of_chunk, chunk)    
             self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
-            print(data)
+            
+            t1 = time.time()
+            self.assign_tasks(data, self.workload.mod_or_div)
+            self.metrics['send_tasks'] = time.time() - t1 if 'send_tasks' not in self.metrics else self.metrics['send_tasks'] + (time.time() - t1)
+
+        self.set_exit()
+        self.metrics['schell_runtime'] = time.time() - start
+        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
+
+
+class NNSCHELLFORALL(BASENNSCHELL):
+    
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
+        super(NNSCHELLFORALL, self).__init__(conn, workload, tasks, descriptor, isverbose)
+        
+    def predict(self):
+        workload = 0
+        
+        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
+        
+        start = time.time()
+        while workload < self.sizeof:
+            chunk = OrderedDict(self.get_chunk())
+            workload += self.size_of_chunk
+            
+            tp = time.time()
+            idx  = list(combinations(chunk.keys(), 2))
+            t1   = []
+            t2   = []
+            for k1, k2 in idx:
+                t1.append(chunk[k1])
+                t2.append(chunk[k2])
+
+            pred = list(zip(self.model.predict(t1, t2), idx))
+            
+            edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
+            graph = self.generate_graph(edges)
+            self.metrics['predict'] = time.time() - tp if 'predict' not in self.metrics else self.metrics['predict'] + (time.time() - tp)
+            
+            t1 = time.time()
+            data = self.DFS(graph, self.size_of_chunk, chunk)    
+            self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
             
             t1 = time.time()
             self.assign_tasks(data, self.workload.mod_or_div)
