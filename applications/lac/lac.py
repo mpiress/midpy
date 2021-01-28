@@ -140,8 +140,8 @@ class LAC(BaseWorkerInfo):
             hits, missing = self.__getRules(itemset, classe)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
             
-        self.info_cache['hits'] += hits
-        self.info_cache['missing'] += missing
+        #self.info_cache['hits'] += hits
+        #self.info_cache['missing'] += missing
                                         
         return [hits, missing]
         

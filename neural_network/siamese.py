@@ -58,7 +58,7 @@ class SIAMESE():
         self.__input        = 1
         self.__out          = 1
         self.__classes      = None
-        self.__lr           = lr
+        self.__lr           = 1e-5 #lr
         self.__dropout      = dropout
         self.__job          = job
         self.__descriptor   = descriptor 
@@ -108,33 +108,40 @@ class SIAMESE():
     
     def __get_train_and_test(self):
         scaler = MinMaxScaler()
-
+        
         if not os.path.exists(constants.BUFFERNN+self.__job+'_train.csv'):
             print('[ERROR]: The training set is not saved in the buffer folder')
             exit(1)
         
+        X = []
         Y = []
         df = pd.read_csv(constants.BUFFERNN+self.__job+'_train.csv')
         for line in df.itertuples():
+            X += self.__descriptor.read_pair_of_tasks(line[1], line[2])
+            Y.append(line[3])
             Y.append(line[3])
             
-        IDX_Y = Counter(Y)
+        #IDX_Y = Counter(Y)
         
-        quantiles = mquantiles(list(IDX_Y.values()))
-        qmax      = math.ceil(quantiles[0])/2
+        #quantiles = mquantiles(list(IDX_Y.values()))
+        #qmax      = math.ceil(quantiles[0])/2
+        #qmin      = math.ceil(qmax/2)
         
-        IDX_Y = {idx:0 for idx in IDX_Y.keys()}
-        
-        X = []
-        Y = []
-        
-        for line in df.itertuples():
-            if line[3] in IDX_Y and IDX_Y[line[3]] <= qmax:
-                X += self.__descriptor.read_pair_of_tasks(line[1], line[2])
-                Y.append(line[3])
-                Y.append(line[3])
-                IDX_Y[line[3]] += 1
+        #IDX_Y = {idx:[] for idx in IDX_Y.keys()}
+        #for line in df.itertuples():
+        #    if line[3] in IDX_Y and len(IDX_Y[line[3]]) < qmax:
+        #        IDX_Y[line[3]] += self.__descriptor.read_pair_of_tasks(line[1], line[2])
  
+        #X = []
+        #Y = []
+        #idx = list(IDX_Y.keys())
+        #for i in idx:
+        #    if len(IDX_Y[i]) < qmin:
+        #        del(IDX_Y[i])
+        #    else:
+        #        X += IDX_Y[i]
+        #        Y += [i]*len(IDX_Y[i])
+
         self.__descriptor.clear_all()
         
         le = preprocessing.LabelEncoder()
@@ -148,12 +155,14 @@ class SIAMESE():
             data[y].append(t1)
             data[y].append(t2)
         
+        print('CLASSES:', Counter(Y))
+
         trainX = []
         trainY = []
         testX  = []
         testY  = []
         for key in data:
-            tsize = math.ceil(len(data[key])*0.05)
+            tsize = math.ceil(len(data[key])*0.20)
             tsize = tsize if tsize % 2 == 0 else tsize + 1
             trainX += data[key][tsize:]
             testX  += data[key][0:tsize]
@@ -209,6 +218,14 @@ class SIAMESE():
             plt.plot(data['val_acc'], label='test')
             plt.legend()
             plt.savefig(constants.BUFFERNN + self.__job + '_accuracy_'+str(self.__nhidden[0])+'.png')
+            plt.close()
+
+            plt.xlabel('epochs ('+str(self.__epochs)+')')
+            plt.ylabel('loss')
+            plt.plot(data['loss'], label='train')
+            plt.plot(data['val_loss'], label='test')
+            plt.legend()
+            plt.savefig(constants.BUFFERNN + self.__job + '_loss_'+str(self.__nhidden[0])+'.png')
             plt.close()
 
             self.__descriptor.load()

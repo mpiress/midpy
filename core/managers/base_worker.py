@@ -111,7 +111,7 @@ class BaseWorker:
             result = self.__worker.processing((task[0], task[1]))
             self.__bytask[task[0]] = [self.__job.cache.get_hits() - hits, self.__job.cache.get_missing() - missing] 
             ttmp += (time.time() - t1)
-            print('[INFO]: TEMPO: ', time.time() - t1)
+            #print('[INFO]: TEMPO: ', time.time() - t1)
             
             tmp = self.__job.cache.get_task_rules()
                 

@@ -24,58 +24,19 @@
 @endcond
 
 """
-import math, os, shutil, sys, socket
-from containers import constants
+import os, sys
 
 path = os.getcwd()
 path = path[0:path.find('MidPy') + 5]
 sys.path.append(path)
 
-from workflow import network_wrapper, metric_wrapper, workload_wrapper
-from workflow import start_workflow_master, shutdown_server_name
-from workflow.lac.config import config
 
+from workflow import start_workflow_master
+from workflow.lac.scripts.config import config
+from workflow.lac.scripts.descriptor import ReaderDescriptor
 
-def parameterization(metric, chunk):
-    network_wrapper(config.AUTHKEY, config.SERVER_PORT, config.NWORKERS, config.GID, config.BUFFER)
-    metric_wrapper(metric)
-    workload_wrapper(chunk, config.TEST, constants.NO_HAS_HEADER, 'queries', config.MOD_OR_DIV)
-    
-def run():
-
-    config.SERVER = socket.gethostbyname(socket.gethostname())
-    with open(config.BUFFER+'server.csv', 'w') as file:
-        file.write(config.SERVER)
-   
-    file = '/var/tmp/'+config.JOB+'_'+config.TEST[config.TEST.rfind('/')+1:]
-    if not os.path.isfile(file):
-        shutil.copyfile(config.TEST, file)
-    
-    config.TEST = file
-    
-    for cache in config.CACHE_TYPE:
-        for m in config.METRICS:
-            for p in config.PATTERNS:
-                csize = config.CACHE_CAPACITY
-                for s in csize:
-                    s = s if s >= 0 else 0
-                    if constants.VERBOSEMODE:
-                        print('================================================================================================')
-                        print('Starting the cache '+cache.__name__.lower()+' with '+str(s)+'% and '+m.__name__.lower()+' metric')
-                        print('================================================================================================')
-                    parameterization(m, p)
-                    mod = '#div' if config.MOD_OR_DIV else '#mod' 
-                    output_path = [config.OUTPUT_PATH+config.JOB+'_'+cache.__name__.lower()+'_'+str(config.NWORKERS)+'_'+mod+'.csv', str(s)]
-                    start_workflow_master(output_path, isverbose=constants.VERBOSEMODE)
-    
-    shutdown_server_name()
-    
-    
 if __name__ == '__main__':
-    
-    run()
-    if os.path.isfile(config.TEST):
-        os.remove(config.TEST)
-    
+    descriptor = ReaderDescriptor(config.TEST)
+    start_workflow_master(config, descriptor)
     exit(0)
     
