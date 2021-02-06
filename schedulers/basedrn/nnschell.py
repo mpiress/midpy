@@ -50,15 +50,15 @@ class BASENNSCHELL(SchedulerManager):
         self.model = SIAMESE(descriptor=descriptor, job=workload.job_name)
     
     def generate_graph(self, edges):
-        graph = {}
+        graph = OrderedDict()
         for p, v in edges:
             if v[0] not in graph:
-                graph[v[0]] = set()
+                graph[v[0]] = list()
             if v[1] not in graph:
-                graph[v[1]] = set()
+                graph[v[1]] = list()
             if p > 0:
-                graph[v[0]].add(v[1])
-                graph[v[1]].add(v[0])
+                graph[v[0]].append(v[1])
+                graph[v[1]].append(v[0])
         return graph
  
     
@@ -188,6 +188,10 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             for wid in (range(self.conn.nworkers)):
                 chunk += data[wid]
 
+            for c in chunk[0:10]:
+                print(c[0])
+            exit(1)
+            
             self.assign_tasks(chunk, self.workload.mod_or_div)
 
         self.set_exit()

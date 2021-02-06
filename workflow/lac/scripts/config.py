@@ -42,19 +42,19 @@ class config:
     BASE_FILE_NAME          = 'lac'
     PATH_DATASET            = '../../../datasets/census/'
 
-    TRAIN_NEURAL_NETWORK    = True
+    TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census.train'
+    TEST                    = PATH_DATASET+'census_1000.test'
     TRAIN                   = PATH_DATASET+'census.train'
     OUTPUT_PATH             = 'results/'
     
-    SIZE_OF_CHUNK           = [100] #[9523] #[16, 64, 256, 1024]
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [10] #[9523] #[16, 64, 256, 1024]
+    SCHEDULERS              = [NNSCHELLFORALL] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 266
-    CACHE_CAPACITY          = [10.0] #[0.75, 1.0, 1.25, 1.5]
+    CACHE_FULL_SIZE         = 26600000
+    CACHE_CAPACITY          = [100] #[0.75, 1.0, 1.25, 1.5]
     
     SERVER_PORT             = 32010
     NWORKERS                = 1

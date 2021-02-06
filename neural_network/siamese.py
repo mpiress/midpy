@@ -58,7 +58,7 @@ class SIAMESE():
         self.__input        = 1
         self.__out          = 1
         self.__classes      = None
-        self.__lr           = 1e-5 #lr
+        self.__lr           = lr
         self.__dropout      = dropout
         self.__job          = job
         self.__descriptor   = descriptor 
