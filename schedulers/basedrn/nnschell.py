@@ -35,12 +35,12 @@ import time
 
 from collections import OrderedDict
 from sklearn.cluster import KMeans
-from itertools import combinations
+from itertools import combinations, permutations
 
 import sys
 sys.setrecursionlimit(10000)
             
-
+from igraph import Graph
 
 
 class BASENNSCHELL(SchedulerManager):
@@ -135,6 +135,36 @@ class BASENNSCHELL(SchedulerManager):
             sizeof[wid] += 1
             wid += 1
         return sizeof
+    
+    def neighborhoodRank(self, dataset):
+        outputset = []
+        edges = []
+        codec = {}
+        code = 0
+        
+        for query in dataset:
+            query = list(enumerate(query[1]))
+            tmp   = []
+            for v in query:
+                if v not in codec:
+                    codec[v] = code
+                    code += 1
+            edges += [(codec[query[i]], codec[query[i+1]]) for i in range(len(query)-1)] + [(codec[query[-1]], codec[query[0]])]
+        
+        G = Graph(edges)
+        attr_count = dict(enumerate(G.pagerank()))
+        
+        t1 = time.time()
+        for index, query in dataset:
+            tmp = 0
+            q = [codec[v] for v in enumerate(query)]
+            edges = permutations(q, 2)
+            for e1, e2 in edges:
+                tmp += (attr_count[e1] + attr_count[e2])
+            outputset.append((index, query, tmp))
+        
+        return outputset
+        
 
     
     
@@ -157,42 +187,65 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             
             chunk = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
-            data = {wid:[] for wid in range(self.conn.nworkers)}
+            data = {wid:0 for wid in range(self.conn.nworkers)}
             
+            self.__sizeoftasks = int(len(chunk)/self.conn.nworkers)
+
             if len(self.__signatures) == 0:
                 self.__signatures = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
                 for wid in range(min(len(chunk), self.conn.nworkers)):
                     task = chunk.popitem()
-                    data[wid].append(task)
+                    self.assign_tasks([task], self.workload.mod_or_div, wid)
+                    data[wid] += 1
                     self.__signatures[wid][task[0]] = task[1]
-
+            
             while chunk:
 
+                ######### NOVO MODELO DE EXECUÇÃO ################
+                IDT = {idx:[] for idx in chunk.keys()}
+                T1  = []
+                T2  = []
+                IDX = []
                 for wid in range(min(len(chunk), self.conn.nworkers)):
                     t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
-                    pred = list(zip(self.model.predict(t1, t2), idx))
-                    edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                    for _ in range(min(self.__sizeoftasks, len(chunk))):
-                        task = edges.pop(0)[1][0]
-                        task = (task, chunk.pop(task))
-                        data[wid].append(task)
-
-                        if len(self.__signatures[wid]) < self.__kcentroids:
-                            self.__signatures[wid][task[0]] = task[1]
+                    T1  += t1
+                    T2  += t2
+                    IDX += list(zip(idx, [wid]*len(idx)))
+                
+                pred = list(zip(self.model.predict(T1, T2), IDX))
+                edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
+                
+                count = 0
+                for p, t in edges:
+                    idx  = t[0][0]
+                    wid  = t[1]
+                    if data[wid] < self.__sizeoftasks and idx in chunk:
+                        task = (idx, chunk.pop(idx))
+                        self.assign_tasks([task], self.workload.mod_or_div, wid)
+                        data[wid] += 1
+                        count += 1
+                    if count * self.__sizeoftasks >= self.conn.nworkers * self.__sizeoftasks:
+                        break
                         
-                        else:
-                            self.__signatures[wid].popitem()
-                            self.__signatures[wid][task[0]] = task[1]
-                    
-            chunk = []
-            for wid in (range(self.conn.nworkers)):
-                chunk += data[wid]
-
-            for c in chunk[0:10]:
-                print(c[0])
-            exit(1)
-            
-            self.assign_tasks(chunk, self.workload.mod_or_div)
+                ##################################################
+                
+                #for wid in range(min(len(chunk), self.conn.nworkers)):
+                #    t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
+                #    pred = list(zip(self.model.predict(t1, t2), idx))
+                #    edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
+                #        
+                #    for _ in range(min(self.__sizeoftasks, len(chunk))):
+                #        task = edges.pop(0)[1][0]
+                #        task = (task, chunk.pop(task))
+                #        self.assign_tasks([task], self.workload.mod_or_div, wid)
+                # 
+                #        if len(self.__signatures[wid]) < self.__kcentroids:
+                #            self.__signatures[wid][task[0]] = task[1]
+                #        
+                #        else:
+                #            self.__signatures[wid].popitem()
+                #            self.__signatures[wid][task[0]] = task[1]
+                
 
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
@@ -206,8 +259,9 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
         super(NNSCHELLBYKCLUSTERS, self).__init__(conn, workload, tasks, descriptor, isverbose)
         self.__maxcent      = 0.10 
         self.__mincent      = 4
-        self.__kcentroids   = 0 
-        self.__centlimit    = 50     
+        self.__kcentroids   = 25 
+        self.__centlimit    = 50 
+        self.__centroids    = []    
 
 
     #estimate based in elbow curve 
@@ -245,8 +299,9 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
                 self.__kcentroids = 25 #self.__estimante_nclusters(chunk) #min(max(math.ceil(self.size_of_chunk*self.__maxcent), self.__mincent), self.__centlimit)
                 print('[INFO]: Number of centroids:', self.__kcentroids)
             
-            centroids = dict(list(chunk.items())[0:self.__kcentroids])
-            t1, t2, idx = self.combinations(chunk, dict(centroids))
+            if len(self.__centroids) == 0:
+                self.__centroids = dict(list(chunk.items())[0:self.__kcentroids])
+            t1, t2, idx = self.combinations(chunk, dict(self.__centroids))
             pred = list(zip(self.model.predict(t1, t2), idx))
             
             edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
@@ -257,6 +312,8 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
             data = self.DFS(graph, self.size_of_chunk, chunk)    
             self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
             
+            self.__centroids = data[0:self.__kcentroids]
+
             t1 = time.time()
             self.assign_tasks(data, self.workload.mod_or_div)
             self.metrics['send_tasks'] = time.time() - t1 if 'send_tasks' not in self.metrics else self.metrics['send_tasks'] + (time.time() - t1)
@@ -292,12 +349,26 @@ class NNSCHELLFORALL(BASENNSCHELL):
             pred = list(zip(self.model.predict(t1, t2), idx))
             
             edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-            graph = self.generate_graph(edges)
+            
+            ####### MODIFICAÇÃO COMEÇA AQUI ######################
+            data = []
+            for idx, t in edges:
+                if not chunk:
+                    break
+                if t[0] in chunk:
+                    task = (t[0], chunk.pop(t[0]))
+                    data.append(task)
+                if t[1] in chunk:
+                    task = (t[1], chunk.pop(t[1]))
+                    data.append(task)
+            ####### MODIFICAÇÃO TERMINA AQUI #####################
+            
+            #graph = self.generate_graph(edges)
             self.metrics['predict'] = time.time() - tp if 'predict' not in self.metrics else self.metrics['predict'] + (time.time() - tp)
             
-            t1 = time.time()
-            data = self.DFS(graph, self.size_of_chunk, chunk)    
-            self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
+            #t1 = time.time()
+            #data = self.DFS(graph, self.size_of_chunk, chunk)    
+            #self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
             
             t1 = time.time()
             self.assign_tasks(data, self.workload.mod_or_div)

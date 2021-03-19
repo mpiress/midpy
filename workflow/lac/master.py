@@ -31,12 +31,13 @@ path = path[0:path.find('MidPy') + 5]
 sys.path.append(path)
 
 
-from workflow import start_workflow_master
+from workflow import WorkflowInitialize
 from workflow.lac.scripts.config import config
 from workflow.lac.scripts.descriptor import ReaderDescriptor
 
 if __name__ == '__main__':
+    wf = WorkflowInitialize()
     descriptor = ReaderDescriptor(config.TEST)
-    start_workflow_master(config, descriptor)
+    wf.start_workflow_master(config, descriptor)
     exit(0)
     

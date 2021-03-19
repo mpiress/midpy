@@ -42,19 +42,19 @@ class config:
     BASE_FILE_NAME          = 'nscale'
     PATH_DATASET            = '../../../datasets/nscale/'
 
-    TRAIN_NEURAL_NETWORK    = True
+    TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+BASE_FILE_NAME+'.train'#PATH_DATASET+'pylogs/moat_full.log'
+    TEST                    = PATH_DATASET+'pylogs/moat_small.log' #PATH_DATASET+BASE_FILE_NAME+'.train'
     TRAIN                   = PATH_DATASET+BASE_FILE_NAME+'.train'
-    OUTPUT_PATH             = 'results/'
+    OUTPUT_PATH             = 'results/tmp/'
     
-    SIZE_OF_CHUNK           = [19065] #[2160] #[16, 64, 256, 1024]
-    SCHEDULERS              = [NNSCHELLBYKCLUSTERS] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [100] #[2160] #[16, 64, 256, 1024]
+    SCHEDULERS              = [RoundRobin] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 1095
-    CACHE_CAPACITY          = [0.75, 1.0, 1.25, 1.5]
+    CACHE_FULL_SIZE         = 1100 #1095
+    CACHE_CAPACITY          = [0.5] #[0.75, 1.0, 1.25, 1.5]
     
     SERVER_PORT             = 32010
     NWORKERS                = 1

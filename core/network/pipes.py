@@ -38,12 +38,12 @@ import time, socket
 
 import Pyro4
 from Pyro4.naming import startNSloop, locateNS
-Pyro4.config.COMPRESSION = True
+Pyro4.config.COMPRESSION = False
 Pyro4.config.METADATA = False
-Pyro4.config.SOCK_REUSE = True
+Pyro4.config.SOCK_REUSE = False
 Pyro4.config.THREADPOOL_SIZE = 8192
-Pyro4.config.SERIALIZER = 'pickle'
-Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
+Pyro4.config.SERIALIZER = 'marshal'
+Pyro4.config.SERIALIZERS_ACCEPTED.add('marshal')
 
 PROXIES = {}
 
@@ -51,7 +51,7 @@ PROXIES = {}
 #                                            REMOTE OBJECT CLASSES                                           #
 ##############################################################################################################
 
-@Pyro4.behavior(instance_mode="single")
+#@Pyro4.behavior(instance_mode="single")
 class LookupWids:
     
     def __init__(self, nworkers):
@@ -70,7 +70,7 @@ class LookupWids:
 
 
 
-@Pyro4.behavior(instance_mode="single")
+#@Pyro4.behavior(instance_mode="single")
 class ResultQueues:
     def __init__(self, nworkers):
         self.__tasks = {k:Queue() for k in range(nworkers)}
@@ -97,7 +97,7 @@ class ResultQueues:
         return self.__tasks[wid].empty()
 
 
-@Pyro4.behavior(instance_mode="single")
+#@Pyro4.behavior(instance_mode="single")
 class TaskQueues:
     def __init__(self):
         self.__tasks = Queue()
@@ -124,7 +124,7 @@ class TaskQueues:
     
 
 
-@Pyro4.behavior(instance_mode="single")
+#@Pyro4.behavior(instance_mode="single")
 class WorkerInfo:
     
     def __init__(self, nworkers):

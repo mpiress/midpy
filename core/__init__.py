@@ -24,13 +24,12 @@
 @endcond
 
 """
-import os, signal, socket
+import os, signal
 
 from multiprocessing import Process
 from core.managers.base_master import BaseMaster
 from core.managers.base_worker import BaseWorker
-from core.managers.orchestrator import Orchestrator
-from core.network.pipes import start_named_server, LookupWids, WorkerInfo, waiting_named_server
+from core.network.pipes import start_named_server, waiting_named_server
 from core.network.pipes import lookup, obj_finalize
 
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper, CacheWrapper
@@ -41,7 +40,6 @@ import time
 class WorkflowManager:
     
     def __init__(self):
-        self.__orchestrator    = None
         self.__master          = None
         self.__slave           = None
         self.__server          = None
@@ -75,13 +73,9 @@ class WorkflowManager:
             self.__id_worker = generate_wid.get()
             
         print('[INFO]: Starting worker pool management') if isverbose else None
-        if self.__slave == None:
-            self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
+        self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
         self.__times['workerpool_runtime'] = self.__slave.processing()
         
-        #generate_wid.put(self.__id_worker)
-        #self.__id_worker = None
-
         return True
         
     def get_execution_times(self):

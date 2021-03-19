@@ -24,18 +24,26 @@
 @endcond
 
 """
+
 import os, sys
 
 path = os.getcwd()
 path = path[0:path.find('MidPy') + 5]
 sys.path.append(path)
 
-from workflow import start_workflow_worker
+from workflow import WorkflowInitialize
 from workflow.lac.scripts.config import config
 from workflow.lac.scripts.descriptor import CacheDescriptor
 
-if __name__ == '__main__':
+from concurrent import futures
+
+def main():
+    wf = WorkflowInitialize()
     descriptor = CacheDescriptor()
-    start_workflow_worker(config, descriptor)
+    wf.start_workflow_worker(config(), descriptor)
+    
+if __name__ == '__main__':
+
+    main()
     exit(0)
 

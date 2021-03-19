@@ -26,6 +26,7 @@
 """
 
 class BaseWorkerInfo:
+    
     def __init__(self):
         self.times = {}
         self.cache = None

@@ -34,8 +34,8 @@ from schedulers.batch.kmeans_rank import KMeansRank
 from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE
 
 from cache.replacement_policies.lru import LRU
-
-from applications.lac.lac import LAC
+ 
+from applications.lac.lac2 import LAC
 
 class config:
     
@@ -44,22 +44,22 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_1000.test'
+    TEST                    = PATH_DATASET+'census_40.test'
     TRAIN                   = PATH_DATASET+'census.train'
-    OUTPUT_PATH             = 'results/'
+    OUTPUT_PATH             = 'results/tmp/'
     
-    SIZE_OF_CHUNK           = [10] #[9523] #[16, 64, 256, 1024]
-    SCHEDULERS              = [NNSCHELLFORALL] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [40] #[16, 64, 256, 1024]
+    SCHEDULERS              = [RoundRobin, NNSCHELLBYSIGNATURE] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 26600000
-    CACHE_CAPACITY          = [100] #[0.75, 1.0, 1.25, 1.5]
-    
+    CACHE_FULL_SIZE         = 221768 #110884
+    CACHE_CAPACITY          = [10] #[0.75, 1.0, 1.25, 1.5]
+    CACHE_DIV_WORKERS       = False
+
     SERVER_PORT             = 32010
     NWORKERS                = 1
 
-    @staticmethod
-    def get_job():
-        job = LAC(config.TRAIN, 3, 0, 0)
-        return job
+    def get_job(self):
+        self.__job = LAC(config.TRAIN, 3, 0, 0)
+        return self.__job

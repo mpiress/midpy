@@ -24,14 +24,13 @@
 @endcond
 
 """
-from core.network.pipes import ResultQueues, TaskQueues, LookupWids, obj_publisher, lookup
+from core.network.pipes import ResultQueues, TaskQueues, LookupWids, obj_publisher
+from core.managers.orchestrator import Orchestrator
 from containers.wrapper.wrappers import NetworkWrapper, SchedulerWrapper, WorkloadWrrapper
 from concurrent import futures
 
-import core
-import csv, time, os
+import csv, time
 import pandas as pd
-import numpy as np
 
 from containers import constants
 
@@ -71,7 +70,7 @@ class BaseMaster():
          
     def __start_scheduler(self):
         print('[INFO]: prepare scheduler strategy') if self.__isverbose else None
-        dispatcher = core.Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, self.__isverbose)
+        dispatcher = Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, self.__isverbose)
         dispatcher.schedulling()
         return dispatcher.get_metrics()
         
@@ -148,7 +147,7 @@ class BaseMaster():
         
         if self.__workload.train_neural_network:
             tasks = []
-            with futures.ThreadPoolExecutor(max_workers=4) as executor:
+            with futures.ThreadPoolExecutor(max_workers=1) as executor:
                 pool = {executor.submit(self.get_nn_results, wid) : wid for wid in range(self.__conn.nworkers)}
 
             for feature in futures.as_completed(pool):
@@ -159,12 +158,12 @@ class BaseMaster():
             df.to_csv(constants.BUFFERNN+self.__workload.job_name+'_train.csv', index=None)
 
         else:
-            with futures.ThreadPoolExecutor(max_workers=4) as executor:
+            with futures.ThreadPoolExecutor(max_workers=1) as executor:
                 pool = {executor.submit(self.get_results, wid, output) : wid for wid in range(self.__conn.nworkers)} 
 
             for feature in futures.as_completed(pool):
                 data = feature.result()
-                runtime += data[0]
+                runtime  = data[0] if data[0] > runtime else runtime
                 hits    += data[1]
                 missing += data[2]
                 nworkers += 1

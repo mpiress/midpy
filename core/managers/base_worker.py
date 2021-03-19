@@ -27,12 +27,9 @@
 """
 from core.managers.worker import Worker
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, CacheWrapper
-from containers import constants
 from core.network.pipes import lookup
-from collections import Counter
 
 import socket, time, csv
-import pandas as pd
 
 class BaseWorker:
     
@@ -49,6 +46,7 @@ class BaseWorker:
         self.__task_similarity  = {}
         self.__name_scheduler   = schell
         self.__cache_descriptor = cache_descriptor
+
         
     def __modules_init(self):
         self.__task_similarity = {}
@@ -89,8 +87,7 @@ class BaseWorker:
                 
             lasttask = (task[0], tmp, task[1])
             task = self.__tasks.get()
-            #print('[INFO]: TEMPO: ', time.time() - t1)
-
+            
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
         self.__train_nn.put('EXIT', self.__id_worker)
 
@@ -99,6 +96,7 @@ class BaseWorker:
         lasttask = []
         
         print('[INFO]: Worker ', self.__id_worker, ' started with ', self.__job.cache.size(), ' rules cached') if self.__isverbose else None
+        
         task = self.__tasks.get()
         start = time.time()
         ttmp = 0
@@ -106,12 +104,13 @@ class BaseWorker:
         while task[0] != 'EXIT':
             hits     = self.__job.cache.get_hits()
             missing  = self.__job.cache.get_missing()
+            
             sworkload += 1
+            
             t1 = time.time() 
             result = self.__worker.processing((task[0], task[1]))
             self.__bytask[task[0]] = [self.__job.cache.get_hits() - hits, self.__job.cache.get_missing() - missing] 
             ttmp += (time.time() - t1)
-            #print('[INFO]: TEMPO: ', time.time() - t1)
             
             tmp = self.__job.cache.get_task_rules()
                 
@@ -121,12 +120,13 @@ class BaseWorker:
                 value = round(len(tmp & lasttask[1])/len(tmp), 2) if len(tmp) > 0 else 0.0 
                 self.__task_similarity[key] = (value, self.__job.cache.get_discards())
                 self.__output['evaluate_cache_similarity'] = (time.time() - t2) if 'evaluate_cache_similarity' not in self.__output else (self.__output['evaluate_cache_similarity'] + (time.time() - t2))           
-                #print('PAIR:', value)
-
+                
             lasttask = (task, tmp)
             task = self.__tasks.get()
+            
             self.__job.cache.clear_evaluations()
             
+
         self.__output['worker_runtime']         = time.time() - start
         self.__output['size_of_work']           = sworkload
         self.__output['tasks_runtime']          = ttmp - self.__job.cache.time
@@ -139,7 +139,8 @@ class BaseWorker:
         
         print('[INFO]: Worker ',self.__id_worker, ' Finished with ', self.__output['size_of_work'], ' tasks processed and,', self.__job.cache.size(),' rules cached') if self.__isverbose else None
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
-        
+        print('[INFO]: Worker ',self.__id_worker,' Finalized in ', self.__output['worker_runtime'], ' secs.') if self.__isverbose else None
+
         self.__output['general_runtime'] = time.time() - start
         output = {socket.gethostname():{self.__id_worker:self.__output}}
         

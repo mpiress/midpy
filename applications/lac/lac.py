@@ -28,15 +28,12 @@
 from core.managers.worker import BaseWorkerInfo
 from utils import read_file
 from itertools import combinations
-from collections import OrderedDict, defaultdict
 
 import time
-
 
 class LAC(BaseWorkerInfo):
 
     def __init__(self, train, maxrule=1, minsup=0, minconf=0):
-        super(LAC, self).__init__()
         self.__maxrule          = maxrule
         self.__minsup           = minsup
         self.__minconf          = minconf
@@ -47,6 +44,8 @@ class LAC(BaseWorkerInfo):
         
         
     def __preprocessing(self, train):
+        data = []
+        index = 0
         
         data = read_file(path=train, norm=False)
         self.size_of_train = data.shape[0]
@@ -54,96 +53,106 @@ class LAC(BaseWorkerInfo):
         for index, line in enumerate(data.values):
             line = list(enumerate(line))
             if line[-1] not in self.__classes:
-                self.__classes[line[-1]] = [index]
+                self.__classes[line[-1]] = {index}
             else:
-                self.__classes[line[-1]].append(index)
+                self.__classes[line[-1]].add(index)
             
             for key in line[0:-1]:
                 if key not in self.__features:
-                    self.__features[key] = [index]
+                    self.__features[key] = {index}
                 else:
-                    self.__features[key].append(index)
+                    self.__features[key].add(index)
             print('[INFO] Load training data:', int(100*index/self.size_of_train),'%', end="\r")
         
-        for key in self.__features:
-            self.__features[key] = set(self.__features[key])
-        for key in self.__classes:
-            self.__classes[key] = set(self.__classes[key])
-
+        #for k in self.__classes:
+        #    self.__classes[k] = sorted(self.__classes[k])
+        #for k in self.__features:
+        #    self.__features[k] = sorted(self.__features[k])
     
-    def __getRules(self, itemset, classe):
-        hits = 0
-        misses = 0
-        rules = {}
-        score = defaultdict()
+    
+    def intersection(self, lst1, lst2):
+        lst3 = []
+        temp1 = set(lst2) if len(lst1) < len(lst2) else set(lst1)
+        temp2 = lst1 if len(lst1) < len(lst2) else lst2
+        lst3 = [value for value in temp2 if value in temp1]
+        return lst3
+
+    def __getRules(self, combination):
+        hits      = 0
+        misses    = 0
+        rules     = {}
+        score     = {}
+        notcached = []
         
-        for size in range(1,self.__maxrule+1):
+        txx = time.time()
+        for c in combination:
+            rule = self.cache.get(c)
+            if rule == -1:
+                notcached.append(c)
+            else:
+                hits += 1
+                for c,v in rule.items():
+                    score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
+        #print('GET RULES:', time.time() - txx)
+        
+        del(combination)
+        
+        tx1 = 0
+        tx = time.time()
+        for rule in notcached:
             
-            combination = list(combinations(itemset.keys(), size))
+            aux = [self.__features[k] for k in rule]
+            l1 = set.intersection(*aux)
             
-            for c in combination:
-
-                rule = self.cache.get(c)
+            if l1:
+                sizeof = len(l1)
+                aux = [(c, len(l1.intersection(t))) for c, t in self.__classes.items()]
                 
-                if rule == -1:
-                    tx = time.time()
-                    tc2 = 0
-                    rule = c
-                    aux = itemset[rule[0]]
-                    if len(rule) >= 2:
-                        for k in rule[1:]:
-                            aux = aux & itemset[k]
-                    
-                    if bool(aux):
-                        for c,t in self.__classes.items():
-                            aux_c = aux & t
-                            if len(aux_c) > 0:
-                                sup = len(aux_c)/self.size_of_train
-                                if sup >= self.__minsup:
-                                    conf = len(aux_c)/len(aux)
-                                    if conf >= self.__minconf:
-                                        if rule not in rules:
-                                            rules[rule] = {}
-                                        rules[rule][c] = [sup, conf]
-                                        score[c] = [score[c][0] + sup, score[c][1] + conf] if c in score else [sup, conf]
+                for c, value in aux:
+                    if value > 0:
+                        sup = value/self.size_of_train
+                        if sup >= self.__minsup:
+                            conf = value/sizeof
+                            if conf >= self.__minconf:
+                                if rule not in rules:
+                                    rules[rule] = {}
+                                rules[rule][c] = [sup, conf]
+                                score[c] = [score[c][0] + sup, score[c][1] + conf] if c in score else [sup, conf]
+                
+                if (rule in rules):
+                    misses += 1
+                    self.cache.set(rule, rules[rule])
                         
-                        if (rule in rules):
-                            misses += 1
-                            self.cache.set(rule, rules[rule])
-
-                    self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
-                        
-                else:
-                    hits += 1
-                    for c,v in rule.items():
-                        score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
-                    
+        self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
+        
+        
         #if you have that return results, using variable c
         c = max(score.items(), key=lambda item:item[1][1]) 
         
-        return [hits, misses]
+        return c
         
 
     def execute_task(self, task):
-        hits, missing = [0,0]
-        itemset = OrderedDict()
+        result = 0
+        itemset = []
         
-        task, classe = list(enumerate(task[0:-1])), task[-1]
+        task = list(enumerate(task[0:-1]))
         
         for k in task:
             if k in self.__features:
-                itemset[k] = self.__features[k]
+                itemset.append(k)
                 
         if len(itemset) > 0:
 
+            combination = []
+            for size in range(1,self.__maxrule+1):
+                combination += list(combinations(itemset, size))
+            #print('COMBINATIONS:', time.time() - txx)
             t1 = time.time()
-            hits, missing = self.__getRules(itemset, classe)
+            result = self.__getRules(combination)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
             
-        #self.info_cache['hits'] += hits
-        #self.info_cache['missing'] += missing
-                                        
-        return [hits, missing]
+        return result
         
 
         

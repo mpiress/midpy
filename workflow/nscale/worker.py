@@ -30,12 +30,12 @@ path = os.getcwd()
 path = path[0:path.find('MidPy') + 5]
 sys.path.append(path)
 
-from workflow import start_workflow_worker
+from workflow import WorkflowInitialize
 from workflow.nscale.scripts.config import config
 from workflow.nscale.scripts.descriptor import CacheDescriptor
 
 if __name__ == '__main__':
+    wf = WorkflowInitialize()
     descriptor = CacheDescriptor()
-    start_workflow_worker(config, descriptor)
-    exit(0)
+    wf.start_workflow_worker(config, descriptor)
 

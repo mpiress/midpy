@@ -68,52 +68,58 @@ class SchedulerManager(BaseManager):
         self.metrics['schell_runtime'] = self.metrics['schell_runtime'] - self.metrics['generate_train_nn'] 
     
     
-    def assign_tasks(self, dataset, div=True):
+    def assign_tasks(self, dataset, div=True, wid=None):
         workload = 0
         
-        if div:
+        if wid:
+            for query in dataset:
+                self.__workers_queues[wid].put(query)
+                self.metrics['workload_wid'][wid].append(query[0])
+                    
+        else:    
+            if div:
 
-            sizeof = math.floor(len(dataset)/self.conn.nworkers)
-            workload = sizeof * self.conn.nworkers
-            wid    = 0
-            pos    = 0
-            
-            while workload > 0:
-                wid = wid % self.conn.nworkers
-                idx = (wid * sizeof) + pos
-                query = dataset[idx]
-                self.__workers_queues[wid].put(query)
-                self.metrics['workload_wid'][wid].append(query[0])
-                wid += 1
-                if wid % self.conn.nworkers == 0:
-                    pos += 1
-                workload -= 1
+                sizeof = math.floor(len(dataset)/self.conn.nworkers)
+                workload = sizeof * self.conn.nworkers
+                wid    = 0
+                pos    = 0
                 
-            wid = 0
-            idx = 0 
-            dataset = dataset[sizeof*self.conn.nworkers:]
-            workload = len(dataset)
-            while workload > 0:
-                wid = wid % self.conn.nworkers
-                query = dataset[idx]
-                self.__workers_queues[wid].put(query)
-                self.metrics['workload_wid'][wid].append(query[0])
-                workload -= 1
-                wid += 1
-                idx += 1
-                
- 
-        else:
-            wid = 0
-            idx = 0
-            workload = len(dataset)
-            while workload > 0:
-                wid = wid % self.conn.nworkers
-                query = dataset[idx]
-                self.__workers_queues[wid].put(query)
-                self.metrics['workload_wid'][wid].append(query[0])
-                workload -= 1
-                wid += 1
+                while workload > 0:
+                    wid = wid % self.conn.nworkers
+                    idx = (wid * sizeof) + pos
+                    query = dataset[idx]
+                    self.__workers_queues[wid].put(query)
+                    self.metrics['workload_wid'][wid].append(query[0])
+                    wid += 1
+                    if wid % self.conn.nworkers == 0:
+                        pos += 1
+                    workload -= 1
+                    
+                wid = 0
+                idx = 0 
+                dataset = dataset[sizeof*self.conn.nworkers:]
+                workload = len(dataset)
+                while workload > 0:
+                    wid = wid % self.conn.nworkers
+                    query = dataset[idx]
+                    self.__workers_queues[wid].put(query)
+                    self.metrics['workload_wid'][wid].append(query[0])
+                    workload -= 1
+                    wid += 1
+                    idx += 1
+                    
+    
+            else:
+                wid = 0
+                idx = 0
+                workload = len(dataset)
+                while workload > 0:
+                    wid = wid % self.conn.nworkers
+                    query = dataset[idx]
+                    self.__workers_queues[wid].put(query)
+                    self.metrics['workload_wid'][wid].append(query[0])
+                    workload -= 1
+                    wid += 1
         
              
     def predict(self):

@@ -4,7 +4,7 @@ PATH = '/Users/michel/Doutorado/MidPy/'
 
 def clear_all():
     global PATH
-    loc = ['applications/', 'applications/lac/', 'applications/pqnns/', 'applications/recsys/']
+    loc = ['applications/', 'applications/lac/', 'applications/nscale/']
     
     for p in loc: 
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
@@ -25,7 +25,7 @@ def clear_all():
     for p in loc: 
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
 
-    loc = ['nn/']
+    loc = ['neural_network/']
     for p in loc: 
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
 
@@ -38,7 +38,7 @@ def clear_all():
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
 
 
-    loc = ['workflow/', 'workflow/lac/', 'workflow/recsys/', 'workflow/pqnns/', 'workflow/netflix/']
+    loc = ['workflow/', 'workflow/lac/', 'workflow/nscale/']
     for p in loc: 
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
 
