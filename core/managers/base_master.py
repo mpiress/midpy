@@ -29,6 +29,8 @@ from core.managers.orchestrator import Orchestrator
 from containers.wrapper.wrappers import NetworkWrapper, SchedulerWrapper, WorkloadWrrapper
 from concurrent import futures
 
+from reduce.reduce import Reduce
+
 import csv, time
 import pandas as pd
 
@@ -49,7 +51,6 @@ class BaseMaster():
         #remote objects
         self.__qresults         = ResultQueues(conn.nworkers)
         self.__wids             = LookupWids(conn.nworkers)
-        self.__resp             = LookupWids(conn.nworkers)
         self.__workers_queues   = {wid:TaskQueues() for wid in range(self.__conn.nworkers)}
         
         prefix = 'global.queues.'
@@ -77,44 +78,44 @@ class BaseMaster():
     def get_daemons(self):
         return self.__daemons
     
-    def get_results(self, wid, output):
-        runtime, hits, missing = 0,0,0
+    #def get_results(self, wid, output):
+    #    runtime, hits, missing = 0,0,0
 
-        data = self.__qresults.get(wid)
-        with open(output[0], 'a', newline='') as csvfile:
-            writer = csv.writer(csvfile, delimiter=' ')    
-            sec = ['worker '+str(wid)+':']
-            writer.writerow(sec)
-        
-            for machine in data:
-                for worker in data[machine]:
-                    for item in data[machine][worker]:
-                        if item == 'worker_runtime':
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with worker runtime:' + str(data[machine][worker][item])])
-                        elif item == 'tasks_runtime':
-                            print('[INFO]: worker ', str(machine), ' with task runtime in ', str(data[machine][worker][item]))
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with tasks runtime:' + str(data[machine][worker][item])])
-                            if data[machine][worker][item] > runtime:
-                                runtime = data[machine][worker][item]
-                        elif item == 'number_of_rules':
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' number of missing:' + str(data[machine][worker][item])])
-                        elif item == 'cache_memory':
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' cache_size:' + str(data[machine][worker][item])])
-                        elif item == 'number_of_hits':
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' number of hits:' + str(data[machine][worker][item])])
-                            hits += data[machine][worker][item]
-                        elif item ==  'size_of_work':
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with size of work:' + str(data[machine][worker][item])])
-                        elif item ==  'size_of_cache':
-                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with size_of_cache:' + str(data[machine][worker][item])])
-                            missing += data[machine][worker][item]
-                        elif item == 'times':    
-                            #process execution time obtained of job process - design pattern in dictionary <key, value>
-                            job_times = data[machine][worker][item]
-                            for key, value in job_times.items():
-                                writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with ' + str(key) + ' runtime:' + str(value)])
-            
-        return runtime, hits, missing
+    #    data = self.__qresults.get(wid)
+    #    with open(output[0], 'a', newline='') as csvfile:
+    #        writer = csv.writer(csvfile, delimiter=' ')    
+    #        sec = ['worker '+str(wid)+':']
+    #        writer.writerow(sec)
+    #    
+    #        for machine in data:
+    #            for worker in data[machine]:
+    #                for item in data[machine][worker]:
+    #                    if item == 'worker_runtime':
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with worker runtime:' + str(data[machine][worker][item])])
+    #                    elif item == 'tasks_runtime':
+    #                        print('[INFO]: worker ', str(machine), ' with task runtime in ', str(data[machine][worker][item]))
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with tasks runtime:' + str(data[machine][worker][item])])
+    #                        if data[machine][worker][item] > runtime:
+    #                            runtime = data[machine][worker][item]
+    #                    elif item == 'number_of_rules':
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' number of missing:' + str(data[machine][worker][item])])
+    #                    elif item == 'cache_memory':
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' cache_size:' + str(data[machine][worker][item])])
+    #                    elif item == 'number_of_hits':
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' number of hits:' + str(data[machine][worker][item])])
+    #                        hits += data[machine][worker][item]
+    #                    elif item ==  'size_of_work':
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with size of work:' + str(data[machine][worker][item])])
+    #                    elif item ==  'size_of_cache':
+    #                        writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with size_of_cache:' + str(data[machine][worker][item])])
+    #                        missing += data[machine][worker][item]
+    #                    elif item == 'times':    
+    #                        #process execution time obtained of job process - design pattern in dictionary <key, value>
+    #                        job_times = data[machine][worker][item]
+    #                        for key, value in job_times.items():
+    #                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with ' + str(key) + ' runtime:' + str(value)])
+    #        
+    #    return runtime, hits, missing
     
     
     def get_nn_results(self, wid):
@@ -138,8 +139,8 @@ class BaseMaster():
 
     
     def processing(self, output):
-        runtime, hits, missing, nworkers = 0, 0, 0, 0
-        
+        reduce = Reduce(self.__conn)
+
         t1 = time.time()
         metrics = self.__start_scheduler()
         self.generate_header(metrics, output) if not self.__workload.train_neural_network else None
@@ -152,28 +153,22 @@ class BaseMaster():
 
             for feature in futures.as_completed(pool):
                 tasks += feature.result()
-                nworkers += 1
-
+                
             df = pd.DataFrame(tasks, columns=['t1', 't2', 'similarity'])
             df.to_csv(constants.BUFFERNN+self.__workload.job_name+'_train.csv', index=None)
 
         else:
             with futures.ThreadPoolExecutor(max_workers=1) as executor:
-                pool = {executor.submit(self.get_results, wid, output) : wid for wid in range(self.__conn.nworkers)} 
+                pool = {executor.submit(reduce.reduce, wid, output) : wid for wid in range(self.__conn.nworkers)} 
 
             for feature in futures.as_completed(pool):
                 data = feature.result()
-                runtime  = data[0] if data[0] > runtime else runtime
-                hits    += data[1]
-                missing += data[2]
-                nworkers += 1
-            
+                
             with open(output[0], 'a', newline='') as csvfile:
                 writer = csv.writer(csvfile, delimiter=' ')
                 writer.writerow(['#'])
 
         if not self.__workload.train_neural_network:
-            print('[INFO]: total execution time in ', runtime, ' with ', hits, 'hits on the cache with ', missing, ' distinct rules stored') if self.__isverbose else None   
             print('[INFO]: global task queue processed') if self.__isverbose else None
         
         return metrics['schell_runtime'], time.time() - t1
