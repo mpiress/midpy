@@ -175,7 +175,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
     def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, isverbose=True):
         
         super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, workers_queues, descriptor, isverbose)
-        self.__sizeofsig    = 2
+        self.__sizeofsig    = 1
         self.__sizeoftasks  = 1
         self.__signatures   = {} 
         self.__sigmanager   = {}    
@@ -341,24 +341,24 @@ class NNSCHELLFORALL(BASENNSCHELL):
             edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
             
             ####### MODIFICAÇÃO COMEÇA AQUI ######################
-            data = []
-            for idx, t in edges:
-                if not chunk:
-                    break
-                if t[0] in chunk:
-                    task = (t[0], chunk.pop(t[0]))
-                    data.append(task)
-                if t[1] in chunk:
-                    task = (t[1], chunk.pop(t[1]))
-                    data.append(task)
+            #data = []
+            #for idx, t in edges:
+            #    if not chunk:
+            #        break
+            #    if t[0] in chunk:
+            #        task = (t[0], chunk.pop(t[0]))
+            #        data.append(task)
+            #    if t[1] in chunk:
+            #        task = (t[1], chunk.pop(t[1]))
+            #        data.append(task)
             ####### MODIFICAÇÃO TERMINA AQUI #####################
             
-            #graph = self.generate_graph(edges)
+            graph = self.generate_graph(edges)
             self.metrics['predict'] = time.time() - tp if 'predict' not in self.metrics else self.metrics['predict'] + (time.time() - tp)
             
-            #t1 = time.time()
-            #data = self.DFS(graph, self.size_of_chunk, chunk)    
-            #self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
+            t1 = time.time()
+            data = self.DFS(graph, self.size_of_chunk, chunk)    
+            self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
             
             t1 = time.time()
             self.assign_tasks(data, self.workload.mod_or_div)
