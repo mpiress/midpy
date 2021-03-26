@@ -247,32 +247,8 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
     
     def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
         super(NNSCHELLBYKCLUSTERS, self).__init__(conn, workload, tasks, descriptor, isverbose)
-        self.__maxcent      = 0.10 
-        self.__mincent      = 4
-        self.__kcentroids   = 25 
-        self.__centlimit    = 50 
-        self.__centroids    = []    
-
-
-    #estimate based in elbow curve 
-    def __elbow_method(self, inertia):
-        m = np.mean(inertia)
-        k =[(index, math.pow((point - m), 2)) for index, point in enumerate(inertia, self.__mincent)]
-        k = sorted(k, key=lambda x:x[1])
-        return k[0][0]
+        self.__kcentroids   = 5 
         
-    
-    def __estimante_nclusters(self, chunk):
-        inertia = []
-        model = KMeans()
-        maxcent = max(math.ceil(self.size_of_chunk*self.__maxcent), self.__mincent)
-        if maxcent > self.__mincent:
-            for k in range(self.__mincent, maxcent):
-                kmeans = KMeans(n_clusters=k, random_state=42).fit(list(chunk.values()))
-                inertia.append(kmeans.inertia_)
-        k = self.__elbow_method(inertia) if maxcent > self.__mincent else self.__mincent
-        return k
-    
 
     def predict(self):
         workload = 0
@@ -285,25 +261,29 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
             workload += self.size_of_chunk
             
             tp = time.time()
-            if ((self.__kcentroids == 0) or ((self.size_of_chunk < self.workload.overview['chunk']) and (self.__kcentroids > self.size_of_chunk/2))):
-                self.__kcentroids = 25 #self.__estimante_nclusters(chunk) #min(max(math.ceil(self.size_of_chunk*self.__maxcent), self.__mincent), self.__centlimit)
-                print('[INFO]: Number of centroids:', self.__kcentroids)
             
-            if len(self.__centroids) == 0:
-                self.__centroids = dict(list(chunk.items())[0:self.__kcentroids])
-            t1, t2, idx = self.combinations(chunk, dict(self.__centroids))
+            #define centroids
+            sizeofslice = math.floor(len(chunk)/2)
+            c1 = dict(list(chunk.items())[0:sizeofslice])
+            c2 = dict(list(chunk.items())[sizeofslice:])
+            t1, t2, idx = self.combinations(c1, c2)
+            
             pred = list(zip(self.model.predict(t1, t2), idx))
+            edges  = list(sorted(pred, key=lambda x:x[0])) 
+            graph = self.generate_graph(edges)
+            data = self.DFS(graph, len(chunk), chunk)    
             
+            chunk = dict(data)
+
+            t1, t2, idx = self.combinations(dict(data[self.__kcentroids:]), dict(data[0:self.__kcentroids]))
+            pred = list(zip(self.model.predict(t1, t2), idx))
             edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
             graph = self.generate_graph(edges)
+            data = self.DFS(graph, len(chunk), chunk)    
+            
             self.metrics['predict'] = time.time() - tp if 'predict' not in self.metrics else self.metrics['predict'] + (time.time() - tp)
             
-            t1 = time.time()
-            data = self.DFS(graph, self.size_of_chunk, chunk)    
-            self.metrics['process_graph'] = time.time() - t1 if 'process_graph' not in self.metrics else self.metrics['process_graph'] + (time.time() - t1)
             
-            self.__centroids = data[0:self.__kcentroids]
-
             t1 = time.time()
             self.assign_tasks(data, self.workload.mod_or_div)
             self.metrics['send_tasks'] = time.time() - t1 if 'send_tasks' not in self.metrics else self.metrics['send_tasks'] + (time.time() - t1)
