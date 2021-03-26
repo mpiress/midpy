@@ -190,7 +190,6 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             
             chunk = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
-            data = {wid:0 for wid in range(self.conn.nworkers)}
             self.__sizeoftasks = math.ceil(len(chunk)/self.conn.nworkers) if self.conn.nworkers > 1 else 1
 
             if len(self.__signatures) == 0:
@@ -207,6 +206,8 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 T1  = []
                 T2  = []
                 IDX = []
+                data = {wid:0 for wid in range(self.conn.nworkers)}
+                
                 for wid in range(min(len(chunk), self.conn.nworkers)):
                     t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
                     T1  += t1
