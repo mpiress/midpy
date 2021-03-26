@@ -191,7 +191,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             chunk = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
             data = {wid:0 for wid in range(self.conn.nworkers)}
-            self.__sizeoftasks = math.ceil(len(chunk)/self.conn.nworkers)
+            self.__sizeoftasks = math.ceil(len(chunk)/self.conn.nworkers) if self.conn.nworkers > 1 else 1
 
             if len(self.__signatures) == 0:
                 self.__signatures = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
@@ -203,38 +203,39 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                     self.__signatures[wid][task[0]] = task[1]
                     self.__sigmanager[wid].append(task[0])
              
-            T1  = []
-            T2  = []
-            IDX = []
-            for wid in range(min(len(chunk), self.conn.nworkers)):
-                t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
-                T1  += t1
-                T2  += t2
-                IDX += list(zip(idx, [wid]*len(idx)))
-            
-            pred = list(zip(self.model.predict(T1, T2), IDX))
-            edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-             
-            count = 0
-            for _, t in edges:
-                idx  = t[0][0]
-                wid  = t[1]
+            while chunk:
+                T1  = []
+                T2  = []
+                IDX = []
+                for wid in range(min(len(chunk), self.conn.nworkers)):
+                    t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
+                    T1  += t1
+                    T2  += t2
+                    IDX += list(zip(idx, [wid]*len(idx)))
                 
-                if data[wid] < self.__sizeoftasks and idx in chunk:
-                    task = (idx, chunk.pop(idx))
-                    self.assign_tasks([task], self.workload.mod_or_div, wid)
-                    data[wid] += 1
-                    count += 1
+                pred = list(zip(self.model.predict(T1, T2), IDX))
+                edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
+                
+                count = 0
+                for _, t in edges:
+                    idx  = t[0][0]
+                    wid  = t[1]
                     
-                    if len(self.__signatures[wid]) > self.__sizeofsig:
-                        key = self.__sigmanager[wid].pop(0)
-                        self.__signatures[wid].pop(key)
+                    if data[wid] < self.__sizeoftasks and idx in chunk:
+                        task = (idx, chunk.pop(idx))
+                        self.assign_tasks([task], self.workload.mod_or_div, wid)
+                        data[wid] += 1
+                        count += 1
                         
-                    self.__signatures[wid][task[0]] = task[1]
-                    self.__sigmanager[wid].append(task[0])
-            
-                if not chunk:
-                    break
+                        if len(self.__signatures[wid]) > self.__sizeofsig:
+                            key = self.__sigmanager[wid].pop(0)
+                            self.__signatures[wid].pop(key)
+                            
+                        self.__signatures[wid][task[0]] = task[1]
+                        self.__sigmanager[wid].append(task[0])
+                
+                    if not chunk:
+                        break
             
 
         self.set_exit()
