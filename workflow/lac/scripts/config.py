@@ -44,12 +44,12 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_100.test'
+    TEST                    = PATH_DATASET+'census_40.test'
     TRAIN                   = PATH_DATASET+'census.train'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [100] #[16, 64, 256, 1024]
-    SCHEDULERS              = [RoundRobin, NNSCHELLBYSIGNATURE] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [40] #[16, 64, 256, 1024]
+    SCHEDULERS              = [NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
