@@ -190,7 +190,8 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             
             chunk = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
-            self.__sizeoftasks = math.ceil(len(chunk)/self.conn.nworkers) if self.conn.nworkers > 1 else 1
+            self.__sizeoftasks = math.ceil(len(chunk)/self.conn.nworkers)
+            data = {wid:0 for wid in range(self.conn.nworkers)}
 
             if len(self.__signatures) == 0:
                 self.__signatures = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
@@ -203,10 +204,10 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                     self.__sigmanager[wid].append(task[0])
              
             while chunk:
+
                 T1  = []
                 T2  = []
                 IDX = []
-                data = {wid:0 for wid in range(self.conn.nworkers)}
                 
                 for wid in range(min(len(chunk), self.conn.nworkers)):
                     t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
@@ -216,9 +217,9 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 
                 pred = list(zip(self.model.predict(T1, T2), IDX))
                 edges = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                
-                count = 0
-                for _, t in edges:
+                edges = edges.pop(0) if self.conn.nworkers == 1 else edges
+
+                for p, t in edges:
                     idx  = t[0][0]
                     wid  = t[1]
                     
@@ -226,8 +227,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         task = (idx, chunk.pop(idx))
                         self.assign_tasks([task], self.workload.mod_or_div, wid)
                         data[wid] += 1
-                        count += 1
-                        
+                            
                         if len(self.__signatures[wid]) > self.__sizeofsig:
                             key = self.__sigmanager[wid].pop(0)
                             self.__signatures[wid].pop(key)
@@ -237,7 +237,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 
                     if not chunk:
                         break
-            
+
 
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
