@@ -38,7 +38,7 @@ def clear_all():
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
 
 
-    loc = ['workflow/', 'workflow/lac/', 'workflow/nscale/']
+    loc = ['workflow/', 'workflow/lac/', 'workflow/nscale/', 'workflow/lac/scripts/', 'workflow/nscale/scripts/']
     for p in loc: 
     	shutil.rmtree(PATH + p + '__pycache__', ignore_errors=True)
 

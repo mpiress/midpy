@@ -31,7 +31,7 @@ from schedulers.batch.round_robin import RoundRobin
 from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE
+from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE, NNSCHELLBYSIGNATURE2
 
 from cache.replacement_policies.lru import LRU
  
@@ -44,21 +44,21 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_10.test'
+    TEST                    = PATH_DATASET+'census_100.test'
     TRAIN                   = PATH_DATASET+'census.train'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [10] #[16, 64, 256, 1024]
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [100] #[16, 64, 256, 1024]
+    SCHEDULERS              = [NeighborhoodRank] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 29590
-    CACHE_CAPACITY          = [1.0] #[0.75, 1.0, 1.25, 1.5]
+    CACHE_FULL_SIZE         = 65671
+    CACHE_CAPACITY          = [0.75] #[0.75, 1.0, 1.25, 1.5]
     CACHE_DIV_WORKERS       = False
 
     SERVER_PORT             = 32010
-    NWORKERS                = 2
+    NWORKERS                = 4
 
     def get_job(self):
         self.__job = LAC(config.TRAIN, 3, 0, 0)
