@@ -44,12 +44,12 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_100.test'
+    TEST                    = PATH_DATASET+'census_40.test'
     TRAIN                   = PATH_DATASET+'census.train'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [100] #[16, 64, 256, 1024]
-    SCHEDULERS              = [NeighborhoodRank] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [40] #[16, 64, 256, 1024]
+    SCHEDULERS              = [NNSCHELLBYSIGNATURE2] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
@@ -58,7 +58,7 @@ class config:
     CACHE_DIV_WORKERS       = False
 
     SERVER_PORT             = 32010
-    NWORKERS                = 4
+    NWORKERS                = 2
 
     def get_job(self):
         self.__job = LAC(config.TRAIN, 3, 0, 0)

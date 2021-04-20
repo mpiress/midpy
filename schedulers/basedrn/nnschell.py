@@ -236,13 +236,15 @@ class NNSCHELLBYSIGNATURE2(BASENNSCHELL):
                 for p, t in edges:
                     wid  = t[1]
                     idx  = t[0][0]
-                    buckets[wid].append((p, idx))
+                    buckets[wid].append([p, idx])
 
                 while chunk and (sum(count) < (self.__sizeofbucket * self.conn.nworkers)):
                     tasks = []
+                    
                     for wid in range(self.conn.nworkers):
                         tasks.append((wid, buckets[wid].pop(0)))
-                    tasks = sorted(tasks, key=lambda x:x[1][0], reverse=True)
+                        tasks[-1][1][0] += buckets[wid][0][0] if buckets[wid] else 0
+                    tasks = sorted(tasks, key=lambda x:x[1][0])
                     
                     for wid, t in tasks:
                         idx = t[1]
