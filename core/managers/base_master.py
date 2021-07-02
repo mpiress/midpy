@@ -39,7 +39,7 @@ from containers import constants
 
 class BaseMaster():
     
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, isverbose):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, execution_id, isverbose):
         
         self.__workload = workload
         self.__schell = schell
@@ -47,10 +47,11 @@ class BaseMaster():
         self.__daemons = {}
         self.__conn = conn
         self.__descriptor = descriptor
+        self.__execution_id = execution_id
         
         #remote objects
         self.__qresults         = ResultQueues(conn.nworkers)
-        self.__wids             = LookupWids(conn.nworkers)
+        self.__wids             = LookupWids(conn.nworkers, conn.wpool, execution_id)
         self.__workers_queues   = {wid:TaskQueues() for wid in range(self.__conn.nworkers)}
         
         prefix = 'global.queues.'
@@ -68,8 +69,11 @@ class BaseMaster():
             name, daemon = obj_publisher(self.__workers_queues[wid], prefix, 'tasks'+str(wid), self.__conn)
             self.__daemons[name] = daemon
                 
-         
+    def update_execution_id(self, execution_id):
+        self.__execution_id = execution_id
+
     def __start_scheduler(self):
+        self.__wids.set()
         print('[INFO]: prepare scheduler strategy') if self.__isverbose else None
         dispatcher = Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, self.__isverbose)
         dispatcher.schedulling()

@@ -51,30 +51,36 @@ class WorkflowManager:
         self.__server = Process(target=start_named_server, args=(conn,))
         self.__server.start()
         
-    def shutdown_server_name(self):
+    def shutdown_server_name(self, conn):
         obj_finalize(self.__conn, self.__master.get_daemons())
         os.kill(self.__server.pid, signal.SIGKILL)
         
-    def taskmanager_init(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, output, isverbose=False):
+    def taskmanager_init(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, output, execution_id=None, isverbose=False):
+        self.__conn = conn
+        
         if self.__master == None:
-            self.__conn = conn
             self.init_server_name(conn) 
             waiting_named_server(conn, isverbose)
-            self.__master = BaseMaster(conn, workload, schell, descriptor, isverbose)
+            self.__master = BaseMaster(conn, workload, schell, descriptor, execution_id, isverbose)
+        
+        generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
+        generate_wid.update_execution_id(execution_id)
+        
         self.__times['orchestrator_runtime'], self.__times['taskmanager_runtime'] = self.__master.processing(output)
 
         return True
         
-    def workerpool_init(self, job, conn:NetworkWrapper, workload:WorkloadWrrapper, cache:CacheWrapper, schell=None, descriptor=None, output_path=None, isverbose=False):
+    def workerpool_init(self, job, conn:NetworkWrapper, workload:WorkloadWrrapper, cache:CacheWrapper, schell=None, descriptor=None, output_path=None, execution_id=None, isverbose=False):
+        self.__id_worker = None
         conn.server = waiting_named_server(conn, isverbose)
         generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
-
-        if self.__id_worker == None:
-            self.__id_worker = generate_wid.get()
+        
+        self.__id_worker = generate_wid.get(execution_id)
             
-        print('[INFO]: Starting worker pool management') if isverbose else None
-        self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
-        self.__times['workerpool_runtime'] = self.__slave.processing()
+        while self.__id_worker != 'EXIT':    
+            self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
+            self.__times['workerpool_runtime'] = self.__slave.processing()
+            self.__id_worker = generate_wid.get(execution_id)
         
         return True
         

@@ -39,6 +39,7 @@ class NetworkWrapper:
     workers             = []
     nworkers            = 1
     nthreads            = 1
+    wpool               = 1
     
 class SchedulerWrapper:
     type_scheduler      = None

@@ -55,9 +55,10 @@ class WorkflowInitialize:
     def get_network_wrapper(self):
         return self.connection
     
-    def set_network_wrapper(self, port=32001, nworkers=1):
+    def set_network_wrapper(self, port=32001, nworkers=1, wpool=1):
         self.connection.port             = port
         self.connection.nworkers         = nworkers
+        self.connection.wpool            = wpool
         
 
     ###############################################################################################################
@@ -109,7 +110,7 @@ class WorkflowInitialize:
         
         ip = socket.gethostbyname(socket.getfqdn())
         self.connection.server = ip
-        self.set_network_wrapper(config.SERVER_PORT, config.NWORKERS)
+        self.set_network_wrapper(config.SERVER_PORT, config.NWORKERS, config.WPOOL)
         
         with open(constants.BUFFER+'server.csv', 'w') as file:
             file.write(ip)
@@ -135,9 +136,11 @@ class WorkflowInitialize:
                         self.set_scheduller_wrapper(schel)
                         mod = '#div' if config.MOD_OR_DIV_SCHELL else '#mod' 
                         output_path = [config.OUTPUT_PATH+config.BASE_FILE_NAME+'_'+cache_type.__name__.lower()+'_'+str(config.NWORKERS)+'_'+mod+'.csv', str(capacity)]
-                        self.workflow.taskmanager_init(self.connection, self.workload, self.scheduler, descriptor, output_path, constants.VERBOSEMODE)
+                        execution_id = (cache_type.__name__.lower(), schel.__name__.lower(), chunk, capacity)
+                        self.workflow.taskmanager_init(self.connection, self.workload, self.scheduler, descriptor, output_path, execution_id, constants.VERBOSEMODE)
                     
-        self.workflow.shutdown_server_name()
+        self.workflow.shutdown_server_name(self.connection)
+        
 
         return True
 
@@ -169,6 +172,7 @@ class WorkflowInitialize:
                         
                         self.set_workload_wrapper(chunk, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_cache_wrapper(cache_size, capacity, cache_type)
-                        self.workflow.workerpool_init(job, self.connection, self.workload, self.cache, schel.__name__.lower(), descriptor, config.OUTPUT_PATH, constants.VERBOSEMODE)
+                        execution_id = (cache_type.__name__.lower(), schel.__name__.lower(), chunk, capacity)
+                        self.workflow.workerpool_init(job, self.connection, self.workload, self.cache, schel.__name__.lower(), descriptor, config.OUTPUT_PATH, execution_id, constants.VERBOSEMODE)
         
         return True

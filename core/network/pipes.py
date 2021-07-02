@@ -53,21 +53,29 @@ PROXIES = {}
 
 #@Pyro4.behavior(instance_mode="single")
 class LookupWids:
-    
-    def __init__(self, nworkers):
+
+    def __init__(self, nworkers, wpool, execution_id):
         self.__wids         = Queue()
         self.__nworkers     = nworkers
-        [self.__wids.put(wid) for wid in range(nworkers)]
+        self.__wpool        = wpool
+        self.__execution_id = execution_id
         self.serializer = Pyro4.util.get_serializer(Pyro4.config.SERIALIZER)
 
-    @Pyro4.expose
-    def put(self, wid):
-        self.__wids.put(wid)
-    
-    @Pyro4.expose
-    def get(self):
-        return self.__wids.get()
+    def set(self):
+        self.__wids = Queue()
+        [self.__wids.put(wid) for wid in range(self.__nworkers)]
+        [self.__wids.put('EXIT') for wid in range(self.__wpool)]
 
+    @Pyro4.expose
+    def update_execution_id(self, execution_id):
+        self.__execution_id = execution_id
+        
+    @Pyro4.expose
+    def get(self, execution_id):
+        while execution_id != self.__execution_id:
+            time.sleep(1)     
+        return self.__wids.get()
+        
 
 
 #@Pyro4.behavior(instance_mode="single")
