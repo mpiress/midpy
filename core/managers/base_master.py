@@ -51,7 +51,7 @@ class BaseMaster():
         
         #remote objects
         self.__qresults         = ResultQueues(conn.nworkers)
-        self.__wids             = LookupWids(conn.nworkers, conn.wpool, execution_id)
+        self.__wids             = LookupWids(conn.nworkers, conn.wpool)
         self.__workers_queues   = {wid:TaskQueues() for wid in range(self.__conn.nworkers)}
         
         prefix = 'global.queues.'
@@ -73,7 +73,7 @@ class BaseMaster():
         self.__execution_id = execution_id
 
     def __start_scheduler(self):
-        self.__wids.set()
+        self.__wids.set(self.__execution_id)
         print('[INFO]: prepare scheduler strategy') if self.__isverbose else None
         dispatcher = Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, self.__isverbose)
         dispatcher.schedulling()

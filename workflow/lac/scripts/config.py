@@ -35,7 +35,7 @@ from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNS
 
 from cache.replacement_policies.lru import LRU
  
-from applications.lac.lac2 import LAC
+from applications.lac.lac import LAC
 
 class config:
     
@@ -44,22 +44,22 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_10.test'
+    TEST                    = PATH_DATASET+'census.test'
     TRAIN                   = PATH_DATASET+'census.train'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [1000] #[16, 64, 256, 1024]
-    SCHEDULERS              = [RoundRobin] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [9523] #[16, 64, 256, 1024]
+    SCHEDULERS              = [NNSCHELLBYSIGNATURE3] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 65671
-    CACHE_CAPACITY          = [50, 100] #[0.75, 1.0, 1.25, 1.5]
+    CACHE_FULL_SIZE         = 178738 #74826 10 tasks
+    CACHE_CAPACITY          = [12.0]#[7.5, 12.0] #[0.75, 1.0, 1.25, 1.5]
     CACHE_DIV_WORKERS       = False
 
-    SERVER_PORT             = 32010
-    NWORKERS                = 2
-    WPOOL                   = 1
+    SERVER_PORT             = 32000
+    NWORKERS                = 64
+    WPOOL                   = 3
 
     def get_job(self):
         self.__job = LAC(config.TRAIN, 3, 0, 0)

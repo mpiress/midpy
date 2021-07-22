@@ -52,12 +52,15 @@ class LAC(BaseWorkerInfo):
         
         for index, line in enumerate(data.values):
             line = list(enumerate(line))
-            if line[-1] not in self.__classes:
-                self.__classes[line[-1]] = {index}
+            
+            key = str(line[-1])
+            if key not in self.__classes:
+                self.__classes[key] = {index}
             else:
-                self.__classes[line[-1]].add(index)
+                self.__classes[key].add(index)
             
             for key in line[0:-1]:
+                key = str(key)
                 if key not in self.__features:
                     self.__features[key] = {index}
                 else:
@@ -68,8 +71,12 @@ class LAC(BaseWorkerInfo):
         #    self.__classes[k] = sorted(self.__classes[k])
         #for k in self.__features:
         #    self.__features[k] = sorted(self.__features[k])
-    
-    
+
+        print("NUMERO DE FEATURES: " , len(self.__features))
+        
+
+
+
     def intersection(self, lst1, lst2):
         lst3 = []
         temp1 = set(lst2) if len(lst1) < len(lst2) else set(lst1)
@@ -78,8 +85,6 @@ class LAC(BaseWorkerInfo):
         return lst3
 
     def __getRules(self, combination):
-        hits      = 0
-        misses    = 0
         rules     = {}
         score     = {}
         notcached = []
@@ -90,10 +95,8 @@ class LAC(BaseWorkerInfo):
             if rule == -1:
                 notcached.append(c)
             else:
-                hits += 1
                 for c,v in rule.items():
                     score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
-        #print('GET RULES:', time.time() - txx)
         
         del(combination)
         
@@ -120,7 +123,6 @@ class LAC(BaseWorkerInfo):
                                 score[c] = [score[c][0] + sup, score[c][1] + conf] if c in score else [sup, conf]
                 
                 if (rule in rules):
-                    misses += 1
                     self.cache.set(rule, rules[rule])
                         
         self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
@@ -136,22 +138,21 @@ class LAC(BaseWorkerInfo):
         result = 0
         itemset = []
         
-        task = list(enumerate(task[0:-1]))
-        
+        task = [str(x) for x in enumerate(task[0:-1])]
         for k in task:
             if k in self.__features:
                 itemset.append(k)
-                
+        
         if len(itemset) > 0:
-
             combination = []
             for size in range(1,self.__maxrule+1):
                 combination += list(combinations(itemset, size))
-            #print('COMBINATIONS:', time.time() - txx)
+            
             t1 = time.time()
             result = self.__getRules(combination)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
             
+        
         return result
         
 

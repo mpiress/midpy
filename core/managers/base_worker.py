@@ -146,6 +146,8 @@ class BaseWorker:
         
         self.__global_queue_results.put(output, self.__id_worker)
 
+        #print(self.__job.cache.get_keys())
+
         
     def __save_internal_data(self):
         md = '#div' if self.__workload.mod_or_div else '#mod'

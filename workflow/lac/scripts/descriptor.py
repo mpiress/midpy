@@ -2,6 +2,7 @@ import pandas as pd
 from containers.descriptor.reader import BaseReaderDescriptor
 from containers.descriptor.cache import BaseCacheDescriptor
 from itertools import combinations
+from ctypes import * 
 
 class ReaderDescriptor(BaseReaderDescriptor):
     def __init__(self, path):
@@ -14,7 +15,7 @@ class ReaderDescriptor(BaseReaderDescriptor):
         return self.task_dim
 
     def load(self):
-        self.dataFrame = pd.read_csv(self.path, header=None)
+        self.dataFrame = pd.read_csv(self.path, header=None, dtype='float32')
         self.index     = self.dataFrame.index.tolist()
         self.task_dim  = self.dataFrame.shape[1]
         
@@ -25,6 +26,7 @@ class ReaderDescriptor(BaseReaderDescriptor):
     def readline(self):
         idx = self.index.pop(0)
         params = self.dataFrame[self.dataFrame.index == idx].values.tolist()[0]
+        params = [round(x, 6) for x in params]
         return params
     
     def clear_all(self):
@@ -34,6 +36,8 @@ class ReaderDescriptor(BaseReaderDescriptor):
     def read_pair_of_tasks(self, idx1, idx2):
         params1 = self.dataFrame[self.dataFrame.index == idx1].values.tolist()[0]
         params2 = self.dataFrame[self.dataFrame.index == idx2].values.tolist()[0]
+        params1 = [round(x, 6) for x in params1]
+        params2 = [round(x, 6) for x in params2]
         return [params1, params2]
 
 

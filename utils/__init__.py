@@ -47,8 +47,7 @@ def get_delimiter(path):
     return d
     
 
-
-def read_file(path, has_header=False, cols=None, norm=True):
+def read_file(path, has_header=False, cols=None, norm=False):
     data = []
     assert os.path.isfile(path), '[ERROR] file is not found in dataset folder, read_file error'
     
@@ -56,19 +55,19 @@ def read_file(path, has_header=False, cols=None, norm=True):
     
     if d:
         if has_header:
-            data = pd.read_csv(path, delimiter=d, usecols=cols)
+            data = pd.read_csv(path, delimiter=d, usecols=cols, dtype=c_float)
         else:
-            data = pd.read_csv(path, header=None, delimiter=d) 
+            data = pd.read_csv(path, header=None, delimiter=d, dtype=c_float) 
     else:
         if has_header:
-            data = pd.read_csv(path, usecols=cols)
+            data = pd.read_csv(path, usecols=cols, dtype=c_float)
         else:
-            data = pd.read_csv(path, header=None) 
+            data = pd.read_csv(path, header=None, dtype=c_float) 
 
     if norm:
         min_max_scaler = MinMaxScaler()
         data = pd.DataFrame(min_max_scaler.fit_transform(data.values))
-            
+    
     return data
 
 

@@ -27,7 +27,7 @@
 
 from typing import Counter
 import warnings
-from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 
 warnings.filterwarnings('ignore')
 import tensorflow as tf

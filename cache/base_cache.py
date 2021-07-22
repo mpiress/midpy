@@ -100,6 +100,9 @@ class Cache:
         
     def size(self):
         return len(self.cache)
+
+    def get_keys(self):
+        return self.cache.keys()
         
     def get(self, key, tid):
         raise NotImplementedError("[ERROR]: this method is not implemented correctless")

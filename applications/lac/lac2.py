@@ -41,39 +41,32 @@ class LAC(BaseWorkerInfo):
     def execute_task(self, task):
         result = 0
         
-        task = [str(t).replace(' ', '') for t in enumerate(task)]
-        task = self.__clac.get_itemset(task)
+        #task = enumerate(task[0:-1])
+        #task = [str(t) for t in enumerate(task[0:-1])]
+        keys = []
+        for i in range(len(task[0:-1])):
+            aux = "(" + str(i) + "," + str(task[i]) + ")"
+            keys.append(aux)
+        
+        task = self.__clac.get_itemset(keys)
         
         combination = []
         for size in range(1,self.__maxrule+1):
             for c in combinations(task, size):
                 value = " "
                 for x in c:
-                    value += str(x).replace(' ','') + " "
+                    value = value + x + " "
                 combination.append(value)
         
         tx = time.time()
         score = {}
-        noncached = []
         for c in combination:
-            
             rule = self.cache.get(c)
             if rule == -1:
-                noncached.append(c)
-            else:
-                for c, v in rule.items():
-                    score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]] 
-        self.times['cached_rules'] = time.time() - tx if 'cached_rules' not in self.times else (self.times['cached_rules'] + (time.time() - tx))           
-        
-        tx = time.time()
-        for key in noncached:
-            tk = time.time()
-            rule = self.__clac.execute_task([key])
-            self.cache.set(key, rule)
-
+                rule = self.__clac.execute_task([c])
+                self.cache.set(c, rule)
             for c, v in rule.items():
-                    score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
-            
+                score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]] 
         self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
         
         result = max(score.items(), key=lambda item:item[1][1])         

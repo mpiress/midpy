@@ -25,6 +25,7 @@
 
 """
 
+from tensorflow.python.ops.gen_array_ops import size
 from schedulers.base_scheduler import SchedulerManager
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper
 
@@ -155,7 +156,6 @@ class BASENNSCHELL(SchedulerManager):
         G = Graph(edges)
         attr_count = dict(enumerate(G.pagerank()))
         
-        t1 = time.time()
         for index, query in dataset:
             tmp = 0
             q = [codec[v] for v in enumerate(query)]
@@ -166,6 +166,31 @@ class BASENNSCHELL(SchedulerManager):
         
         outputset = list(map(lambda x: (x[0], x[1]), sorted(outputset, key=lambda x: x[2], reverse=True)))
 
+        return outputset
+    
+    def neighborhoodRank_local_coordinate(self, dataset):
+        edges = []
+        codec = {}
+        idf    = {}
+        code = 0
+        
+        for query in dataset:
+            query = list(enumerate(query[1]))
+            tmp   = []
+            for v in query:
+                if v not in codec:
+                    codec[v] = code
+                    code += 1
+            edges += [(codec[query[i]], codec[query[i+1]]) for i in range(len(query)-1)] + [(codec[query[-1]], codec[query[0]])]
+        
+        G = Graph(edges)
+        attr_count = dict(enumerate(G.pagerank()))
+        local_weight = sum(attr_count.values())
+        
+        outputset = {}
+        for index, query in dataset:
+            outputset[index] = math.log2(1 + sum([attr_count[codec[v]] for v in enumerate(query)]))
+             
         return outputset
         
 
@@ -304,13 +329,14 @@ class NNSCHELLBYSIGNATURE2(BASENNSCHELL):
                 
                 pred    = list(zip(self.model.predict(T1, T2), IDX))
                 edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                buckets = {wid:[] for wid in range(self.conn.nworkers)}
+                
+                buckets  = {wid:[] for wid in range(self.conn.nworkers)}
                 
                 for p, t in edges:
                     wid  = t[1]
                     idx  = t[0][0]
                     buckets[wid].append([p, idx])
-
+                
                 while chunk and (sum(count) < (self.__sizeofbucket * self.conn.nworkers)):
                     tasks = []
                     
@@ -347,6 +373,7 @@ class NNSCHELLBYSIGNATURE3(BASENNSCHELL):
         super(NNSCHELLBYSIGNATURE3, self).__init__(conn, workload, workers_queues, descriptor, isverbose)
         self.__signatures   = {} 
         self.__balance      = {}
+        self.__batch_size   = 100 if 100 < self.size_of_chunk else int(self.size_of_chunk/2)
         
     def predict(self):
         workload = 0
@@ -367,27 +394,27 @@ class NNSCHELLBYSIGNATURE3(BASENNSCHELL):
                     wids = list(set(range(self.conn.nworkers)) - set(self.__signatures.keys()))
                     
                     #define centroids
-                    sizeofslice = math.floor(len(chunk)/2)
-                    c1 = dict(list(chunk.items())[0:sizeofslice])
-                    c2 = dict(list(chunk.items())[sizeofslice:])
+                    c1 = dict(list(chunk.items())[0:self.__batch_size])
+                    c2 = dict(list(chunk.items())[-self.__batch_size:])
+                    cc = list(chunk.items())
                     t1, t2, idx = self.combinations(c1, c2)
                     
                     pred = list(zip(self.model.predict(t1, t2), idx))
                     edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
                     graph = self.generate_graph(edges)
                     data = self.DFS(graph, len(chunk), chunk)
-                    
+                    chunk = dict(cc)
+
+                    cents = []
                     while data and wids:
                         task = data.pop(0)
                         wid  = wids.pop(0)
                         self.__signatures[wid] = {}
                         self.assign_tasks([task], self.workload.mod_or_div, wid)
                         self.__signatures[wid][task[0]] = task[1]
-                    
-                    chunk = dict(data)
+                        chunk.pop(task[0])
                         
                 else:    
-                    
                     if len(self.__balance) < self.conn.nworkers:
                         wids = list(set(range(self.conn.nworkers)) - set(self.__balance.keys()))
                     else:
@@ -403,33 +430,50 @@ class NNSCHELLBYSIGNATURE3(BASENNSCHELL):
                         T2  += t2
                         IDX += list(zip(idx, [wid]*len(idx)))
                     
+                    #grau de relevância global (Entropia)
                     pred    = list(zip(self.model.predict(T1, T2), IDX))
-                    edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                    buckets = {wid:[] for wid in wids}
                     
-                    for p, t in edges:
+                    buckets = {wid:[] for wid in wids}
+                    for p, t in pred:
                         wid  = t[1]
                         idx  = t[0][0]
-                        buckets[wid].append([p, idx])
+                        buckets[wid].append([math.log2(1 + p), idx])
+                        #if(buckets[wid]):
+                        #    buckets[wid][-1][0] +=  math.log2(1 + p)
 
-                    while chunk and len(self.__balance) < self.conn.nworkers:
+                    for wid in wids:
+                        buckets[wid] = sorted(buckets[wid], key=lambda x:x[0], reverse=True)
+                    
+                    balance_factor = []
+                    while chunk: 
+
+                        if not balance_factor:
+                            balance_factor = list(range(self.conn.nworkers))
+
+                        tasks = {}
+                        for wid in balance_factor:
+                            if buckets[wid]:
+                                
+                                t = buckets[wid].pop(0)
+                                while t[1] not in chunk and buckets[wid]:
+                                    t = buckets[wid].pop(0)
+
+                                if t[1] not in tasks:
+                                    tasks[t[1]] = [wid, t[0]]
+                                elif tasks[t[1]][1] > t[0]:
+                                    tasks[t[1]] = [wid, t[0]]
+                            
+                            else:
+                                balance_factor.pop(balance_factor.index(wid))
                         
-                        tasks = []
-                        for wid in wids:
-                            tasks.append((wid, buckets[wid].pop(0)))
-                            tasks[-1][1][0] += buckets[wid][0][0] if buckets[wid] else 0
-                        tasks = sorted(tasks, key=lambda x:x[1][0])
-                        
-                        for wid, t in tasks:
-                            idx = t[1]
-                            if idx in chunk and wid not in self.__balance:
-                                task = (idx, chunk.pop(idx))
-                                self.assign_tasks([task], self.workload.mod_or_div, wid)
-                                        
-                                self.__signatures[wid] = {}
-                                self.__signatures[wid][task[0]] = task[1]
-                                self.__balance[wid] = 1
-                                                
+                                                                    
+                        for idx in tasks:
+                            wid = tasks[idx][0]
+                            task = (idx, chunk.pop(idx))
+                            self.assign_tasks([task], self.workload.mod_or_div, wid)            
+                            self.__signatures[wid] = {}
+                            self.__signatures[wid][task[0]] = task[1]
+                            balance_factor.pop(balance_factor.index(wid))
                     
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
