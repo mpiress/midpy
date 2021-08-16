@@ -1,7 +1,6 @@
 import pandas as pd
 from containers.descriptor.reader import BaseReaderDescriptor
 from containers.descriptor.cache import BaseCacheDescriptor
-from itertools import combinations
 from ctypes import * 
 
 class ReaderDescriptor(BaseReaderDescriptor):
@@ -15,7 +14,7 @@ class ReaderDescriptor(BaseReaderDescriptor):
         return self.task_dim
 
     def load(self):
-        self.dataFrame = pd.read_csv(self.path, header=None, dtype='float32')
+        self.dataFrame = pd.read_csv(self.path, header=None, dtype='float_')
         self.index     = self.dataFrame.index.tolist()
         self.task_dim  = self.dataFrame.shape[1]
         

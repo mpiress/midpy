@@ -40,15 +40,15 @@ class LAC(BaseWorkerInfo):
 
     def execute_task(self, task):
         result = 0
-        
-        #task = enumerate(task[0:-1])
-        #task = [str(t) for t in enumerate(task[0:-1])]
+        sizeof = len(task) - 1
+
         keys = []
-        for i in range(len(task[0:-1])):
+        for i in range(sizeof):
             aux = "(" + str(i) + "," + str(task[i]) + ")"
             keys.append(aux)
         
         task = self.__clac.get_itemset(keys)
+        tmp  = set(keys) - set(task)
         
         combination = []
         for size in range(1,self.__maxrule+1):

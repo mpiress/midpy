@@ -37,7 +37,7 @@ import time, math, random
 
 class NeighborhoodRank(SchedulerManager):
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
         """!
         @brief Constructor of feature rank scheduler.
         @details Initializer is used for creating the Feature Rank scheduler manager based stratege presented on SBAC paper
@@ -49,7 +49,7 @@ class NeighborhoodRank(SchedulerManager):
         @see base_scheduler
         """
         
-        super(NeighborhoodRank, self).__init__(conn, workload, tasks, descriptor, isverbose)
+        super(NeighborhoodRank, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
         
         if self.isverbose:
             print('[INFO]: executing neighborhood rank for task scheduling')
@@ -63,6 +63,7 @@ class NeighborhoodRank(SchedulerManager):
         edges = []
         codec = {}
         code = 0
+        
         t1 = time.time()
         for query in dataset:
             query = list(enumerate(query[1]))
@@ -94,6 +95,11 @@ class NeighborhoodRank(SchedulerManager):
     
     def __distribution(self, div=True):
         workload = 0
+        wid = 0
+        
+        t1 = time.time()
+        workload += self.warmup_cache()
+        self.metrics['schell_warmup_cache'] = time.time() - t1    
         
         t1 = time.time()
         while workload < self.sizeof:
@@ -110,9 +116,6 @@ class NeighborhoodRank(SchedulerManager):
         self.metrics['schell_runtime'] = time.time() - t1
         
         
-        
-    
-    
     def predict(self):
         """!
         @brief Method used to process queries according to RoundRobin scheduler policy
@@ -133,12 +136,6 @@ class NeighborhoodRank(SchedulerManager):
                         (worker_id, query_id)
                     ]
         """
-        
-        #if self.workload.dynamic_dist:
-        #    tmp = 'poisson' if self.workload.dist_poisson else 'gaussian'
-        #    print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s) in ', tmp, ' distribution') if self.isverbose else None
-        #    runtime = self.__dynamic_task_distribution(self.workload.dist_poisson, self.workload.dist_in_div)
-        #else:
         
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         self.__distribution(self.workload.mod_or_div)

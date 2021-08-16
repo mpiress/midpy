@@ -47,7 +47,7 @@ class FIFO(Cache):
     def set(self, key, value):
         if self.capacity > 0:
             self.add_produced_rule(key)
-            if (self.size() < self.capacity):
+            if not self.lock:
                 self.cache[key] = value
             
             elif self.capacity != -1:

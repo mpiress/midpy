@@ -42,6 +42,7 @@ class Cache:
         self.hits               = 0
         self.missing            = 0
         self.time               = 0
+        self.lock               = False
         
         #used to compose metrics investigation 
         self.task_cache         = set()
@@ -55,10 +56,6 @@ class Cache:
     def get_missing(self):
         return self.missing 
            
-    def set_number_of_tasks(self, workload):
-        if workload == self.k:
-            self.capacity = len(self.cache)
-        
     def get_cache_time(self):
         return self.times
         
@@ -73,11 +70,9 @@ class Cache:
         self.task_cache = set()
         return tmp
 
-    def set_capacity(self, capacity):
-        self.capacity = capacity
-        
     def clear(self):
         self.cache.clear()
+        self.clear_evaluations()
     
     def add_produced_rule(self, rule):
         self.produced_rules.append(rule)
@@ -101,9 +96,9 @@ class Cache:
     def size(self):
         return len(self.cache)
 
-    def get_keys(self):
-        return self.cache.keys()
-        
+    def locked(self):
+        self.lock = True
+
     def get(self, key, tid):
         raise NotImplementedError("[ERROR]: this method is not implemented correctless")
 

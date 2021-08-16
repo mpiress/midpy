@@ -45,6 +45,7 @@ class WorkflowManager:
         self.__server          = None
         self.__id_worker       = None
         self.__conn            = None
+        self.__generate_wid    = None
         self.__times           = {'orchestrator_runtime':0, 'taskmanager_runtime':0, 'workerpool_runtime':0}
     
     def init_server_name(self, conn:NetworkWrapper):
@@ -61,12 +62,11 @@ class WorkflowManager:
         if self.__master == None:
             self.init_server_name(conn) 
             waiting_named_server(conn, isverbose)
-            self.__master = BaseMaster(conn, workload, schell, descriptor, execution_id, isverbose)
-        
-        generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
-        generate_wid.update_execution_id(execution_id)
-        
-        self.__times['orchestrator_runtime'], self.__times['taskmanager_runtime'] = self.__master.processing(output)
+            self.__master = BaseMaster(conn, workload, schell, descriptor, isverbose)
+            self.__generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
+
+        self.__generate_wid.set(execution_id)
+        self.__times['orchestrator_runtime'], self.__times['taskmanager_runtime'] = self.__master.processing(output, execution_id[-1])
 
         return True
         
@@ -76,12 +76,16 @@ class WorkflowManager:
         generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
         
         self.__id_worker = generate_wid.get(execution_id)
+
+        while self.__id_worker != 'EXIT':
             
-        while self.__id_worker != 'EXIT':    
-            self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
-            self.__times['workerpool_runtime'] = self.__slave.processing()
+            if self.__id_worker != 'WAIT':
+                self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
+                self.__slave.update_wid(self.__id_worker)
+                self.__times['workerpool_runtime'] = self.__slave.processing()
+            
             self.__id_worker = generate_wid.get(execution_id)
-        
+            
         return True
         
     def get_execution_times(self):

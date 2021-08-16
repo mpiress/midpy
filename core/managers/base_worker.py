@@ -126,6 +126,10 @@ class BaseWorker:
             
             self.__job.cache.clear_evaluations()
             
+            if sworkload == self.__job.cache.get_capacity():
+                self.__job.cache.locked()
+                print("SIZEOF WORKLOAD: ", sworkload, ' capacity:', self.__job.cache.get_capacity())
+
 
         self.__output['worker_runtime']         = time.time() - start
         self.__output['size_of_work']           = sworkload
@@ -142,24 +146,21 @@ class BaseWorker:
         print('[INFO]: Worker ',self.__id_worker,' Finalized in ', self.__output['worker_runtime'], ' secs.') if self.__isverbose else None
 
         self.__output['general_runtime'] = time.time() - start
-        output = {socket.gethostname():{self.__id_worker:self.__output}}
-        
+        output = {self.__id_worker:{self.__id_worker:self.__output}}
         self.__global_queue_results.put(output, self.__id_worker)
-
-        #print(self.__job.cache.get_keys())
-
+        self.__job.cache.clear()
+        
         
     def __save_internal_data(self):
         md = '#div' if self.__workload.mod_or_div else '#mod'
         app = self.__job.__class__.__name__.lower()
         tcache = self.__cache.type_cache.__name__.lower()
         
-        sizeof = self.__cache.percent if self.__cache.percent >= 0 else 0
         md = '#div' if self.__workload.mod_or_div else '#mod'
         output = self.__output_path + app+'_'+tcache+'_'+'w'+str(self.__id_worker)+'_'+md+'.csv'
         with open(output, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=' ')
-            writer.writerow(['---------------------> ' + self.__name_scheduler + ' SCHEDULLER, CACHE WITH ' + str(sizeof) + '% AND CHUNK OF ('+str(self.__workload.overview['chunk'])+') -----------------'])
+            writer.writerow(['---------------------> ' + self.__name_scheduler + ' SCHEDULLER, CACHE WITH ' + str(self.__cache.capacity) + ' TASKS AND CHUNK OF ('+str(self.__workload.overview['chunk'])+') -----------------'])
             for key, value in self.__task_similarity.items():
                 ht1 = self.__bytask[key[0]][0]
                 rt1 = self.__bytask[key[0]][1]
@@ -169,6 +170,9 @@ class BaseWorker:
                 writer.writerow([aux])
             writer.writerow(['#'])
             
+    def update_wid(self, wid):
+        self.__id_worker = wid
+        
     def processing(self): 
         self.__modules_init()
         worker = socket.gethostbyname(socket.getfqdn())

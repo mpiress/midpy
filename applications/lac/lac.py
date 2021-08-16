@@ -95,7 +95,7 @@ class LAC(BaseWorkerInfo):
             if rule == -1:
                 notcached.append(c)
             else:
-                for c,v in rule.items():
+                for c, v in rule.items():
                     score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
         
         del(combination)
@@ -110,23 +110,20 @@ class LAC(BaseWorkerInfo):
             if l1:
                 sizeof = len(l1)
                 aux = [(c, len(l1.intersection(t))) for c, t in self.__classes.items()]
-                
+                eval = {}
                 for c, value in aux:
                     if value > 0:
                         sup = value/self.size_of_train
                         if sup >= self.__minsup:
                             conf = value/sizeof
                             if conf >= self.__minconf:
-                                if rule not in rules:
-                                    rules[rule] = {}
-                                rules[rule][c] = [sup, conf]
+                                eval[c] = [sup, conf]
                                 score[c] = [score[c][0] + sup, score[c][1] + conf] if c in score else [sup, conf]
                 
-                if (rule in rules):
-                    self.cache.set(rule, rules[rule])
+                if eval:
+                    self.cache.set(rule, eval)
                         
         self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
-        
         
         #if you have that return results, using variable c
         c = max(score.items(), key=lambda item:item[1][1]) 

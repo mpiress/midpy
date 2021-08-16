@@ -51,38 +51,31 @@ PROXIES = {}
 #                                            REMOTE OBJECT CLASSES                                           #
 ##############################################################################################################
 
-#@Pyro4.behavior(instance_mode="single")
+@Pyro4.behavior(instance_mode="single")
 class LookupWids:
 
     def __init__(self, nworkers, wpool):
-        self.__wids         = Queue()
+        self.__wids         = {}
         self.__nworkers     = nworkers
         self.__wpool        = wpool
-        self.__execution_id = None
-        self.serializer = Pyro4.util.get_serializer(Pyro4.config.SERIALIZER)
-
-    def set(self, execution_id):
-        self.__wids = Queue()
-        [self.__wids.put(wid) for wid in range(self.__nworkers)]
-        [self.__wids.put('EXIT') for wid in range(self.__wpool)]
-        self.__execution_id = execution_id
-
+        
     @Pyro4.expose
-    def update_execution_id(self, execution_id):
-        self.__execution_id = execution_id
+    def set(self, execution_id):
+        self.__wids[execution_id] = Queue()
+        [self.__wids[execution_id].put(wid) for wid in range(self.__nworkers)]
+        [self.__wids[execution_id].put('EXIT') for _ in range(self.__wpool)]
         
     @Pyro4.expose
     def get(self, execution_id):
-        while execution_id != self.__execution_id:
-            time.sleep(1)     
-        return self.__wids.get()
+        if execution_id not in self.__wids or self.__wids[execution_id].empty():
+            return 'WAIT'
+        return self.__wids[execution_id].get()
         
 
 #@Pyro4.behavior(instance_mode="single")
 class ResultQueues:
     def __init__(self, nworkers):
         self.__tasks = {k:Queue() for k in range(nworkers)}
-        self.__nworkers = nworkers
         
     @Pyro4.expose
     def reset_queue(self, wid):

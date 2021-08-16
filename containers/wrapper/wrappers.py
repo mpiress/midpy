@@ -48,7 +48,6 @@ class SchedulerWrapper:
 class CacheWrapper:
     type_cache          = None
     capacity            = 0
-    percent             = 0
    
 class LibraryWrapper:
     @staticmethod

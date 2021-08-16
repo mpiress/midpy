@@ -56,7 +56,8 @@ class LRU(Cache):
         
         if self.capacity > 0:
             self.add_produced_rule(key)
-            if (self.size() < self.capacity):
+
+            if not self.lock:
                 self.cache[key] = value
                 self.cache.move_to_end(key, last=False)
 

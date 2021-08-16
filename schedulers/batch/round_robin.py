@@ -37,9 +37,9 @@ class RoundRobin(SchedulerManager):
     @brief Round Robin Scheduler Policy
     '''
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
         
-        super(RoundRobin, self).__init__(conn, workload, tasks, descriptor, isverbose)
+        super(RoundRobin, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
         
         if self.isverbose:
             print('[INFO]: executing RoundRobin scheduler for ', self.sizeof ,' tasks')
@@ -48,16 +48,19 @@ class RoundRobin(SchedulerManager):
     def predict(self):
         
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
-        
         workload = 0
+
+        t1 = time.time()
+        workload += self.warmup_cache()
+        self.metrics['schell_warmup_cache'] = time.time() - t1    
         
         t1 = time.time()
         while workload < self.sizeof:
             chunk = self.get_chunk()
             workload += len(chunk)
-            self.assign_tasks(chunk, self.workload.mod_or_div)     
-        self.metrics['schell_runtime'] = time.time() - t1
-            
+            self.assign_tasks(chunk, self.workload.mod_or_div) 
+        self.metrics['schell_runtime'] = time.time() - t1    
+
         self.set_exit()
         
         print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None

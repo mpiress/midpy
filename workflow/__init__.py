@@ -92,11 +92,10 @@ class WorkflowInitialize:
     def get_cache_wrapper(self):
         return self.cache
 
-    def set_cache_wrapper(self, capacity=0, percent=0, policy=None):
+    def set_cache_wrapper(self, policy=None, capacity=0):
         assert policy, '[ERROR]: cache maintenance policy is not defined'
-        self.cache.capacity    = capacity
         self.cache.type_cache  = policy
-        self.cache.percent     = percent
+        self.cache.capacity    = capacity
         
 
     ###############################################################################################################
@@ -126,11 +125,9 @@ class WorkflowInitialize:
             for schel in config.SCHEDULERS:
                 for chunk in config.SIZE_OF_CHUNK:
                     for capacity in config.CACHE_CAPACITY:
-                        capacity = capacity if capacity >= 0 else 0
-                        
                         if constants.VERBOSEMODE:
                             print('================================================================================================')
-                            print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+'% and '+schel.__name__.lower()+' metric')
+                            print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' metric')
                             print('================================================================================================')
                         self.set_workload_wrapper(chunk, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_scheduller_wrapper(schel)
@@ -163,15 +160,11 @@ class WorkflowInitialize:
                         
                         if constants.VERBOSEMODE:
                             print('================================================================================================')
-                            print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+'% and '+schel.__name__.lower()+' scheduller')
+                            print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' scheduller')
                             print('================================================================================================')
-                        if config.CACHE_DIV_WORKERS:
-                            cache_size = math.ceil((config.CACHE_FULL_SIZE/config.NWORKERS)*capacity/100) if capacity >= 0 else -1
-                        else:
-                            cache_size = math.ceil(config.CACHE_FULL_SIZE*capacity/100) if capacity >= 0 else -1
                         
                         self.set_workload_wrapper(chunk, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
-                        self.set_cache_wrapper(cache_size, capacity, cache_type)
+                        self.set_cache_wrapper(cache_type, capacity)
                         execution_id = (cache_type.__name__.lower(), schel.__name__.lower(), chunk, capacity)
                         self.workflow.workerpool_init(job, self.connection, self.workload, self.cache, schel.__name__.lower(), descriptor, config.OUTPUT_PATH, execution_id, constants.VERBOSEMODE)
         
