@@ -128,7 +128,6 @@ class BaseWorker:
             
             if sworkload == self.__job.cache.get_capacity():
                 self.__job.cache.locked()
-                print("SIZEOF WORKLOAD: ", sworkload, ' capacity:', self.__job.cache.get_capacity())
 
 
         self.__output['worker_runtime']         = time.time() - start

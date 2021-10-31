@@ -40,6 +40,7 @@ class LAC(BaseWorkerInfo):
         self.__classes          = {}
         self.__features         = {}
         self.size_of_train      = 0
+        #self.idxtask            = 0
         self.__preprocessing(train)
         
         
@@ -85,11 +86,9 @@ class LAC(BaseWorkerInfo):
         return lst3
 
     def __getRules(self, combination):
-        rules     = {}
         score     = {}
         notcached = []
         
-        txx = time.time()
         for c in combination:
             rule = self.cache.get(c)
             if rule == -1:
@@ -100,7 +99,6 @@ class LAC(BaseWorkerInfo):
         
         del(combination)
         
-        tx1 = 0
         tx = time.time()
         for rule in notcached:
             
@@ -149,7 +147,9 @@ class LAC(BaseWorkerInfo):
             result = self.__getRules(combination)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
             
-        
+            #print("TEMPO DE EXECUÇÃO (", str(self.idxtask),"):", time.time() - t1)
+            #self.idxtask += 1
+
         return result
         
 

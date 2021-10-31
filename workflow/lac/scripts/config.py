@@ -31,7 +31,7 @@ from schedulers.batch.round_robin import RoundRobin
 from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYSIGNATURE, NNSCHELLBYSIGNATURE3
+from schedulers.basedrn.nnschell import NNSCHELLBYSIGNATURE
 
 from cache.replacement_policies.lru import LRU
  
@@ -40,16 +40,16 @@ from applications.lac.lac import LAC
 class config:
     
     BASE_FILE_NAME          = 'lac'
-    PATH_DATASET            = '../../../datasets/census_norm/'
+    PATH_DATASET            = '../../../datasets/census/'
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census.tiny'
-    TRAIN                   = PATH_DATASET+'census.train'
+    TEST                    = PATH_DATASET+'census_small_tiny.test'
+    TRAIN                   = PATH_DATASET+'census_small.train'
     OUTPUT_PATH             = '../../../tmp/'
     
     SIZE_OF_CHUNK           = [100] 
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE3]
+    SCHEDULERS              = [NNSCHELLBYSIGNATURE]
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
@@ -61,5 +61,5 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = LAC(config.TRAIN, 3, 0, 0)
+        self.__job = LAC(config.TRAIN, 4, 0, 0)
         return self.__job

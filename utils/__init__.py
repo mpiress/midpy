@@ -55,14 +55,14 @@ def read_file(path, has_header=False, cols=None, norm=False):
     
     if d:
         if has_header:
-            data = pd.read_csv(path, delimiter=d, usecols=cols, dtype=c_float)
+            data = pd.read_csv(path, delimiter=d, usecols=cols, dtype="float_")
         else:
-            data = pd.read_csv(path, header=None, delimiter=d, dtype=c_float) 
+            data = pd.read_csv(path, header=None, delimiter=d, dtype="float_") 
     else:
         if has_header:
-            data = pd.read_csv(path, usecols=cols, dtype=c_float)
+            data = pd.read_csv(path, usecols=cols, dtype="float_")
         else:
-            data = pd.read_csv(path, header=None, dtype=c_float) 
+            data = pd.read_csv(path, header=None, dtype="float_") 
 
     if norm:
         min_max_scaler = MinMaxScaler()

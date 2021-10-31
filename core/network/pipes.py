@@ -51,7 +51,7 @@ PROXIES = {}
 #                                            REMOTE OBJECT CLASSES                                           #
 ##############################################################################################################
 
-@Pyro4.behavior(instance_mode="single")
+#@Pyro4.behavior(instance_mode="single")
 class LookupWids:
 
     def __init__(self, nworkers, wpool):

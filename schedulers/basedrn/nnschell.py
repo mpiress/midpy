@@ -234,12 +234,21 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 pred    = list(zip(self.model.predict(T1, T2), IDX))
                 edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
                 
-                buckets  = {wid:[] for wid in wids}
+                probbucket  = edges[0][0]
+                countprob   = [0] * self.conn.nworkers  
+                buckets     = {wid:[] for wid in wids}
                 for p, t in edges:
                     wid  = t[1]
                     idx  = t[0][0]
                     buckets[wid].append([p, idx])
+                    if p == probbucket:
+                        countprob[wid] += 1
                 
+                #countprob = min(countprob)
+                #self.__sizeofbucket = countprob if countprob > 1 else 1
+                self.__sizeofbucket = math.ceil(len(chunk)/self.conn.nworkers)
+                
+                send_tasks = {wid:[] for wid in wids}
                 while chunk and wids:
                     tasks = []
                     
@@ -252,7 +261,8 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:
                             task = (t[1], chunk.pop(t[1]))
-                            self.assign_tasks([task], self.workload.mod_or_div, wid)
+                            #self.assign_tasks([task], self.workload.mod_or_div, wid)
+                            send_tasks[wid].append(task)
                             count[wid] += 1
                                 
                             if len(self.__signatures[wid]) >= self.__sigsize:
@@ -262,7 +272,16 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                             
                         if count[wid] == self.__sizeofbucket:
                             wids.remove(wid)
-                            
+                            send_tasks[wid] = self.neighborhoodRank(send_tasks[wid]) if len(send_tasks[wid]) > 1 else send_tasks[wid]
+                            self.assign_tasks(send_tasks[wid], self.workload.mod_or_div, wid)
+                            send_tasks.pop(wid)
+                
+                for wid in send_tasks:
+                    send_tasks[wid] = self.neighborhoodRank(send_tasks[wid]) if len(send_tasks[wid]) > 1 else send_tasks[wid]
+                    self.assign_tasks(send_tasks[wid], self.workload.mod_or_div, wid)
+                    
+
+
                 
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start

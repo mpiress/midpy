@@ -37,39 +37,58 @@ class LAC(BaseWorkerInfo):
         self.__maxrule = maxrule
         self.__clac    = C_LAC(minsup, minconf, path)
         self.__clac.preprocessing()
+        self.__check = [0.0, 1.0]
 
     def execute_task(self, task):
         result = 0
         sizeof = len(task) - 1
-
+        score = {}
+        
         keys = []
         for i in range(sizeof):
-            aux = "(" + str(i) + "," + str(task[i]) + ")"
+            if task[i] not in self.__check:
+                aux = "(" + str(i) + "," + str(task[i]) + ")"
+            else:
+                aux = "(" + str(i) + "," + str(task[i]) + "000)"
             keys.append(aux)
         
+        
         task = self.__clac.get_itemset(keys)
-        tmp  = set(keys) - set(task)
         
         combination = []
-        for size in range(1,self.__maxrule+1):
+        for size in range(1, self.__maxrule+1):
             for c in combinations(task, size):
-                value = " "
+                value = "#"
                 for x in c:
-                    value = value + x + " "
-                combination.append(value)
+                    value = value + str(x) + "#"
+                rule = self.cache.get(value)
+                if rule != -1:
+                    for c, v in rule.items():
+                        score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]  
+                else:
+                    combination.append(value)
         
         tx = time.time()
-        score = {}
-        for c in combination:
-            rule = self.cache.get(c)
-            if rule == -1:
-                rule = self.__clac.execute_task([c])
-                self.cache.set(c, rule)
-            for c, v in rule.items():
-                score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]] 
+        rule = self.__clac.execute_task(combination, self.__maxrule)
+        warmup = {} 
+        for key in rule:
+            for r in rule[key]:
+                tmp  = r.split("&")
+                sup  = float(tmp[1])
+                conf = float(tmp[3])
+                score[tmp[0]] = [score[c][0] + sup, score[c][1] + conf] if c in score else [sup, conf]
+                if tmp[0] not in warmup:
+                    warmup[tmp[0]] = {key:[sup, conf]}
+                warmup[tmp[0]][key] = [sup, conf]
+        
+        for rule in warmup:
+            self.cache.set(rule, warmup[rule])
+        
         self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
         
-        result = max(score.items(), key=lambda item:item[1][1])         
+        #print("TEMPO: ", time.time() - tx)
+        
+        #result = max(score.items(), key=lambda item:item[1][1])         
         
         return result
         
