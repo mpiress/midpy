@@ -203,7 +203,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
         workload = 0
         count = []
         wids  = []
-
+        
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         t1 = time.time()
@@ -235,19 +235,12 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
                 
                 probbucket  = edges[0][0]
-                countprob   = [0] * self.conn.nworkers  
                 buckets     = {wid:[] for wid in wids}
                 for p, t in edges:
                     wid  = t[1]
                     idx  = t[0][0]
                     buckets[wid].append([p, idx])
-                    if p == probbucket:
-                        countprob[wid] += 1
-                
-                #countprob = min(countprob)
-                #self.__sizeofbucket = countprob if countprob > 1 else 1
-                self.__sizeofbucket = math.ceil(len(chunk)/self.conn.nworkers)
-                
+                    
                 send_tasks = {wid:[] for wid in wids}
                 while chunk and wids:
                     tasks = []
@@ -261,16 +254,15 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:
                             task = (t[1], chunk.pop(t[1]))
-                            #self.assign_tasks([task], self.workload.mod_or_div, wid)
                             send_tasks[wid].append(task)
                             count[wid] += 1
-                                
+                                 
                             if len(self.__signatures[wid]) >= self.__sigsize:
                                 self.__signatures[wid].popitem(last=False)
 
                             self.__signatures[wid][task[0]] = task[1]
                             
-                        if count[wid] == self.__sizeofbucket:
+                        if count[wid] >= self.__sizeofbucket:
                             wids.remove(wid)
                             send_tasks[wid] = self.neighborhoodRank(send_tasks[wid]) if len(send_tasks[wid]) > 1 else send_tasks[wid]
                             self.assign_tasks(send_tasks[wid], self.workload.mod_or_div, wid)
@@ -282,7 +274,6 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                     
 
 
-                
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
         print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
