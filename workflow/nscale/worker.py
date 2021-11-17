@@ -35,6 +35,8 @@ from workflow.nscale.scripts.config import config
 from workflow.nscale.scripts.descriptor import CacheDescriptor
 
 if __name__ == '__main__':
+    config.NWORKERS = int(sys.argv[1])
+    config.WPOOL = int(sys.argv[1])
     wf = WorkflowInitialize()
     descriptor = CacheDescriptor()
     wf.start_workflow_worker(config, descriptor)
