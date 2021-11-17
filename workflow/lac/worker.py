@@ -38,6 +38,9 @@ from workflow.lac.scripts.descriptor import CacheDescriptor
 from concurrent import futures
 
 def main():
+    config.NWORKERS = int(sys.argv[1])
+    config.WPOOL = int(sys.argv[1])
+    
     wf = WorkflowInitialize()
     descriptor = CacheDescriptor()
     wf.start_workflow_worker(config(), descriptor)

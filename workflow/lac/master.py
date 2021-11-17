@@ -36,6 +36,8 @@ from workflow.lac.scripts.config import config
 from workflow.lac.scripts.descriptor import ReaderDescriptor
 
 if __name__ == '__main__':
+    config.NWORKERS = int(sys.argv[1])
+    config.WPOOL = int(sys.argv[1])
     wf = WorkflowInitialize()
     descriptor = ReaderDescriptor(config.TEST)
     wf.start_workflow_master(config, descriptor)
