@@ -203,7 +203,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
         workload = 0
         count = []
         wids  = []
-        
+
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         t1 = time.time()
@@ -234,7 +234,6 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 pred    = list(zip(self.model.predict(T1, T2), IDX))
                 edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
                 
-                probbucket  = edges[0][0]
                 buckets     = {wid:[] for wid in wids}
                 for p, t in edges:
                     wid  = t[1]
@@ -254,26 +253,18 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:
                             task = (t[1], chunk.pop(t[1]))
-                            send_tasks[wid].append(task)
+                            self.assign_tasks([task], self.workload.mod_or_div, wid)
                             count[wid] += 1
-                                 
+                                
                             if len(self.__signatures[wid]) >= self.__sigsize:
                                 self.__signatures[wid].popitem(last=False)
 
                             self.__signatures[wid][task[0]] = task[1]
                             
-                        if count[wid] >= self.__sizeofbucket:
+                        if count[wid] == self.__sizeofbucket:
                             wids.remove(wid)
-                            send_tasks[wid] = self.neighborhoodRank(send_tasks[wid]) if len(send_tasks[wid]) > 1 else send_tasks[wid]
-                            self.assign_tasks(send_tasks[wid], self.workload.mod_or_div, wid)
-                            send_tasks.pop(wid)
+                            
                 
-                for wid in send_tasks:
-                    send_tasks[wid] = self.neighborhoodRank(send_tasks[wid]) if len(send_tasks[wid]) > 1 else send_tasks[wid]
-                    self.assign_tasks(send_tasks[wid], self.workload.mod_or_div, wid)
-                    
-
-
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
         print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
