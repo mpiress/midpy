@@ -196,7 +196,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
         
         super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, workers_queues, descriptor, warmup_cache, isverbose)
         self.__sigsize      = warmup_cache
-        self.__sizeofbucket = 1
+        self.__sizeofbucket = 3
         self.__signatures   = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
         
     def predict(self):
