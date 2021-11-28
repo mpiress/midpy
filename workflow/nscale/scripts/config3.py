@@ -44,22 +44,22 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'pylogs/moat_small.log' #PATH_DATASET+BASE_FILE_NAME+'.train'
-    TRAIN                   = PATH_DATASET+BASE_FILE_NAME+'.train'
-    OUTPUT_PATH             = 'results/tmp/'
+    TEST                    = PATH_DATASET+'pylogs/moat_full.log'
+    TRAIN                   = PATH_DATASET+'nscale.train'
+    OUTPUT_PATH             = '../../../results/nscale/'
     
-    SIZE_OF_CHUNK           = [100] #[2160] #[16, 64, 256, 1024]
-    SCHEDULERS              = [RoundRobin] #[RoundRobin, NNSCHELLBYKCLUSTERS, NNSCHELLBYSIGNATURE, NNSCHELLFORALL]
+    SIZE_OF_CHUNK           = [2160]
+    SCHEDULERS              = [RoundRobin] 
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_FULL_SIZE         = 1100 #1095
-    CACHE_CAPACITY          = [0.5] #[0.75, 1.0, 1.25, 1.5]
-    
+    CACHE_CAPACITY          = [1, 2, 3, 4]
+    CACHE_DIV_WORKERS       = False
+
     SERVER_PORT             = 32010
     NWORKERS                = 1
+    WPOOL                   = 1
 
-    @staticmethod
-    def get_job():
-        job = NSCALE('/home/michel/Doutorado/datasets/nscale/imgs/image5.tiff', '/home/michel/Doutorado/datasets/nscale/imgs/output.png')
-        return job
+    def get_job(self):
+        self.__job = NSCALE('/home/michel/datasets/nscale/imgs/img4k.png', '/home/michel/datasets/nscale/imgs/output.png')
+        return self.__job

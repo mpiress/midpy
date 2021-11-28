@@ -24,6 +24,7 @@
 @endcond
 
 """
+
 import os, sys
 
 path = os.getcwd()
@@ -34,10 +35,18 @@ from workflow import WorkflowInitialize
 from workflow.nscale.scripts.config import config
 from workflow.nscale.scripts.descriptor import CacheDescriptor
 
-if __name__ == '__main__':
+from concurrent import futures
+
+def main():
     config.NWORKERS = int(sys.argv[1])
     config.WPOOL = int(sys.argv[1])
+    
     wf = WorkflowInitialize()
     descriptor = CacheDescriptor()
-    wf.start_workflow_worker(config, descriptor)
+    wf.start_workflow_worker(config(), descriptor)
+    
+if __name__ == '__main__':
+
+    main()
+    exit(0)
 
