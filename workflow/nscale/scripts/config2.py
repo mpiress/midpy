@@ -49,6 +49,7 @@ class config:
     OUTPUT_PATH             = '../../../results/nscale/'
     
     SIZE_OF_CHUNK           = [2160]
+    SIZE_OF_BUCKET          = 1
     SCHEDULERS              = [NeighborhoodRank] 
     MOD_OR_DIV_SCHELL       = constants.DIV
 

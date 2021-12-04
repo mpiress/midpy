@@ -31,35 +31,37 @@ from schedulers.batch.round_robin import RoundRobin
 from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYSIGNATURE
+from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE
 
 from cache.replacement_policies.lru import LRU
- 
-from applications.lac.lac import LAC
+
+from applications.nscale.nscale import NSCALE
 
 class config:
     
-    BASE_FILE_NAME          = 'lac'
-    PATH_DATASET            = '../../../datasets/census/'
+    BASE_FILE_NAME          = 'nscale'
+    PATH_DATASET            = '../../../datasets/nscale/'
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_small_tiny.test'
-    TRAIN                   = PATH_DATASET+'census_small.train'
-    OUTPUT_PATH             = '../../../tmp/'
+    TEST                    = PATH_DATASET+'pylogs/moat_full.log'
+    TRAIN                   = PATH_DATASET+'nscale.train'
+    OUTPUT_PATH             = '../../../results/nscale/'
     
-    SIZE_OF_CHUNK           = [100] 
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE]
+    SIZE_OF_CHUNK           = [2160]
+    SIZE_OF_BUCKET          = 3
+    SCHEDULERS              = [NNSCHELLBYSIGNATURE] 
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1] 
+    CACHE_CAPACITY          = [1, 2, 3, 4]
     CACHE_DIV_WORKERS       = False
 
-    SERVER_PORT             = 32000
+    SERVER_PORT             = 32010
     NWORKERS                = 1
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = LAC(config.TRAIN, 4, 0, 0)
+        self.__job = NSCALE('/home/michel/datasets/nscale/imgs/img4k.png', '/home/michel/datasets/nscale/imgs/output.png')
         return self.__job
+

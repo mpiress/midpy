@@ -109,7 +109,7 @@ class BaseWorker:
             
             t1 = time.time() 
             result = self.__worker.processing((task[0], task[1]))
-            self.__bytask[task[0]] = [self.__job.cache.get_hits() - hits, self.__job.cache.get_missing() - missing] 
+            self.__bytask[task[0]] = [self.__job.cache.get_hits() - hits, self.__job.cache.get_missing() - missing, time.time() - t1] 
             ttmp += (time.time() - t1)
             
             tmp = self.__job.cache.get_task_rules()
@@ -163,9 +163,11 @@ class BaseWorker:
             for key, value in self.__task_similarity.items():
                 ht1 = self.__bytask[key[0]][0]
                 rt1 = self.__bytask[key[0]][1]
+                te1 = self.__bytask[key[0]][2]
                 ht2 = self.__bytask[key[1]][0]
                 rt2 = self.__bytask[key[1]][1]
-                aux = {'t1':key[0], 't2':key[1], 'similar?':value[0], 'premature_discard':value[1][0], 'discarded':value[1][1], 'used':value[1][2], 'hits_t1':ht1, 'rules_t1':rt1, 'hits_t2':ht2, 'rules_t2':rt2}
+                te2 = self.__bytask[key[0]][2]
+                aux = {'t1':key[0], 't2':key[1], 't1_runtime':te1, 't2_runtime':te2, 'similar?':value[0], 'premature_discard':value[1][0], 'discarded':value[1][1], 'used':value[1][2], 'hits_t1':ht1, 'rules_t1':rt1, 'hits_t2':ht2, 'rules_t2':rt2}
                 writer.writerow([aux])
             writer.writerow(['#'])
             

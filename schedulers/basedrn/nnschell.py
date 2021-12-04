@@ -196,7 +196,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
         
         super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, workers_queues, descriptor, warmup_cache, isverbose)
         self.__sigsize      = warmup_cache
-        self.__sizeofbucket = 1
+        self.__sizeofbucket = self.workload.overview['bucket']
         self.__signatures   = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
         
     def predict(self):
@@ -249,6 +249,9 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         tasks[-1][1][0] = math.log2(1 + tasks[-1][1][0] + buckets[wid][0][0]) if buckets[wid] else 0
                     tasks = sorted(tasks, key=lambda x:x[1][0])
                     
+                    tam = math.ceil(size(tasks)/self.conn.nworkers)
+                    self.__sizeofbucket = self.__sizeofbucket if  tam >= self.__sizeofbucket else tam
+
                     for wid, t in tasks:
                         
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:

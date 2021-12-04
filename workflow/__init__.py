@@ -78,9 +78,10 @@ class WorkflowInitialize:
     def get_workload_wrapper(self):
         return self.workload
 
-    def set_workload_wrapper(self, chunk=1, train=False, job_name=None):
+    def set_workload_wrapper(self, chunk=1, bucket=1, train=False, job_name=None):
         assert chunk > 0, '[ERROR]: chunk must be greater than or equal to 1'
         self.workload.overview['chunk']      = chunk
+        self.workload.overview['bucket']     = bucket
         self.workload.train_neural_network   = train
         self.workload.job_name               = job_name
 
@@ -129,7 +130,7 @@ class WorkflowInitialize:
                             print('================================================================================================')
                             print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' metric')
                             print('================================================================================================')
-                        self.set_workload_wrapper(chunk, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
+                        self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_scheduller_wrapper(schel)
                         mod = '#div' if config.MOD_OR_DIV_SCHELL else '#mod' 
                         output_path = [config.OUTPUT_PATH+config.BASE_FILE_NAME+'_'+cache_type.__name__.lower()+'_'+str(config.NWORKERS)+'_'+mod+'.csv', str(capacity)]
@@ -163,7 +164,7 @@ class WorkflowInitialize:
                             print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' scheduller')
                             print('================================================================================================')
                         
-                        self.set_workload_wrapper(chunk, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
+                        self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_cache_wrapper(cache_type, capacity)
                         execution_id = (cache_type.__name__.lower(), schel.__name__.lower(), chunk, capacity)
                         self.workflow.workerpool_init(job, self.connection, self.workload, self.cache, schel.__name__.lower(), descriptor, config.OUTPUT_PATH, execution_id, constants.VERBOSEMODE)

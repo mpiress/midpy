@@ -27,7 +27,7 @@ from lib import clibrary
 from containers import constants
 
 class WorkloadWrrapper:
-    overview             = {'chunk':1}  
+    overview             = {'chunk':1, 'bucket':1}  
     mod_or_div           = constants.DIV
     train_neural_network = False
     job_name             = None
