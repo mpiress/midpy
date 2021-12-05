@@ -249,7 +249,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         tasks[-1][1][0] = math.log2(1 + tasks[-1][1][0] + buckets[wid][0][0]) if buckets[wid] else 0
                     tasks = sorted(tasks, key=lambda x:x[1][0])
                     
-                    tam = math.ceil(size(tasks)/self.conn.nworkers)
+                    tam = math.ceil(len(tasks)/self.conn.nworkers)
                     self.__sizeofbucket = self.__sizeofbucket if  tam >= self.__sizeofbucket else tam
 
                     for wid, t in tasks:
