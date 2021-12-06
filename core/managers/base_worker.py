@@ -121,7 +121,7 @@ class BaseWorker:
                 self.__task_similarity[key] = (value, self.__job.cache.get_discards())
                 self.__output['evaluate_cache_similarity'] = (time.time() - t2) if 'evaluate_cache_similarity' not in self.__output else (self.__output['evaluate_cache_similarity'] + (time.time() - t2))           
                 
-            lasttask = (task, tmp)
+            lasttask = (task, tmp, ttmp)
             task = self.__tasks.get()
             
             self.__job.cache.clear_evaluations()
@@ -166,7 +166,7 @@ class BaseWorker:
                 te1 = self.__bytask[key[0]][2]
                 ht2 = self.__bytask[key[1]][0]
                 rt2 = self.__bytask[key[1]][1]
-                te2 = self.__bytask[key[0]][2]
+                te2 = self.__bytask[key[1]][2]
                 aux = {'t1':key[0], 't2':key[1], 't1_runtime':te1, 't2_runtime':te2, 'similar?':value[0], 'premature_discard':value[1][0], 'discarded':value[1][1], 'used':value[1][2], 'hits_t1':ht1, 'rules_t1':rt1, 'hits_t2':ht2, 'rules_t2':rt2}
                 writer.writerow([aux])
             writer.writerow(['#'])
