@@ -44,7 +44,7 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'pylogs/moat_full.log'
+    TEST                    = PATH_DATASET+'nscale.test'
     TRAIN                   = PATH_DATASET+'nscale.train'
     OUTPUT_PATH             = '../../../results/nscale/'
     
