@@ -39,7 +39,7 @@ if __name__ == '__main__':
     config.NWORKERS = int(sys.argv[1])
     config.WPOOL = int(sys.argv[1])
     wf = WorkflowInitialize()
-    descriptor = ReaderDescriptor(config.TEST)
+    descriptor = ReaderDescriptor()
     wf.start_workflow_master(config, descriptor)
     exit(0)
     

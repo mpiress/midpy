@@ -4,8 +4,8 @@ from containers.descriptor.cache import BaseCacheDescriptor
 from ctypes import * 
 
 class ReaderDescriptor(BaseReaderDescriptor):
-    def __init__(self, path):
-        super(ReaderDescriptor, self).__init__(path)
+    def __init__(self):
+        super(ReaderDescriptor, self).__init__()
         self.dataFrame = None
         self.nns       = None
         self.index     = None

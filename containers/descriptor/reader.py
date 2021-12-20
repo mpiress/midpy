@@ -26,11 +26,14 @@
 """
 
 class BaseReaderDescriptor:
-    def __init__(self, path):
+    def __init__(self):
         self.index = 0
         self.dataFrame = None
-        self.path = path
+        self.path = None
         
+    def set_path(self, path):
+        self.path = path 
+
     def sizeof(self):
         raise NotImplementedError("[ERROR]: this method is not implemented correctless")
 

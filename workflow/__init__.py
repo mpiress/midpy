@@ -28,12 +28,9 @@ import workflow
 from containers import constants
 from containers.wrapper.wrappers import NetworkWrapper, SchedulerWrapper, WorkloadWrrapper, CacheWrapper
 
-from cache.replacement_policies.fifo import FIFO
 from core import WorkflowManager
 
-from schedulers.batch.round_robin import RoundRobin
-
-import socket, os, math, shutil
+import socket, os, shutil
 
 __local_path__ = workflow.__path__[0] + os.sep
 
@@ -116,11 +113,10 @@ class WorkflowInitialize:
             file.write(ip)
     
         file = '/var/tmp/'+config.BASE_FILE_NAME+'_'+config.TEST[config.TEST.rfind('/')+1:]
-        if os.path.isfile(file):
-            os.remove(file)
-        if not os.path.isfile(file):
-            shutil.copyfile(config.TEST, file)
+        shutil.copyfile(config.TEST, file)
         config.TEST = file
+
+        descriptor.set_path(config.TEST)
 
         for cache_type in config.CACHE_TYPE:
             for schel in config.SCHEDULERS:
@@ -143,13 +139,14 @@ class WorkflowInitialize:
         return True
 
 
-    def start_workflow_worker(self, config, descriptor=None):
+    def start_workflow_worker(self, config, cache_descriptor=None):
         self.workflow = WorkflowManager()
                         
         ip = socket.gethostbyname(socket.getfqdn())
         self.set_network_wrapper(config.SERVER_PORT, config.NWORKERS)
         print('[INFO]: local IP ', ip) if constants.VERBOSEMODE else None
         
+
         print('[INFO]: Waiting start the job ...') if constants.VERBOSEMODE else None
         job = config.get_job()
         assert job, '[ERROR]: the job is not defined correctly'
@@ -167,6 +164,6 @@ class WorkflowInitialize:
                         self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_cache_wrapper(cache_type, capacity)
                         execution_id = (cache_type.__name__.lower(), schel.__name__.lower(), chunk, capacity)
-                        self.workflow.workerpool_init(job, self.connection, self.workload, self.cache, schel.__name__.lower(), descriptor, config.OUTPUT_PATH, execution_id, constants.VERBOSEMODE)
+                        self.workflow.workerpool_init(job, self.connection, self.workload, self.cache, schel.__name__.lower(), cache_descriptor, config.OUTPUT_PATH, execution_id, constants.VERBOSEMODE)
         
         return True

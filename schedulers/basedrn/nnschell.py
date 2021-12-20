@@ -203,7 +203,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
         workload = 0
         count = []
         wids  = []
-
+        
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         t1 = time.time()
@@ -215,6 +215,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             
             chunk     = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
+            perform = {wid:[] for wid in range(self.conn.nworkers)}
             
             while chunk:
                 if not wids:
@@ -256,7 +257,8 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:
                             task = (t[1], chunk.pop(t[1]))
-                            self.assign_tasks([task], self.workload.mod_or_div, wid)
+                            #self.assign_tasks([task], self.workload.mod_or_div, wid)
+                            perform[wid].append(task)
                             count[wid] += 1
                                 
                             if len(self.__signatures[wid]) >= self.__sigsize:
@@ -266,6 +268,10 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                             
                         if count[wid] == self.__sizeofbucket:
                             wids.remove(wid)
+            
+            for wid in range(self.conn.nworkers):
+                self.assign_tasks(perform[wid], self.workload.mod_or_div, wid)
+
                             
                 
         self.set_exit()

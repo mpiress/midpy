@@ -37,6 +37,8 @@ from cache.replacement_policies.lru import LRU
 
 from applications.nscale.nscale import NSCALE
 
+import shutil
+
 class config:
     
     BASE_FILE_NAME          = 'nscale'
@@ -62,5 +64,8 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = NSCALE('/home/michel/datasets/nscale/imgs/img4k.png', '/home/michel/datasets/nscale/imgs/output.png')
+        file   = '/var/tmp/img4k.png'
+        origem =  '/home/michel/Doutorado/datasets/nscale/imgs/img4k.png'
+        shutil.copyfile(origem, file)
+        self.__job = NSCALE(file, '/var/tmp/output.png')
         return self.__job

@@ -3,8 +3,8 @@ from containers.descriptor.reader import BaseReaderDescriptor
 from containers.descriptor.cache import BaseCacheDescriptor
       
 class ReaderDescriptor(BaseReaderDescriptor):
-    def __init__(self, path):
-        super(ReaderDescriptor, self).__init__(path)
+    def __init__(self):
+        super(ReaderDescriptor, self).__init__()
         self.dataFrame = None
         self.index     = None
         self.task_dim  = 0

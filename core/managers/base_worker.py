@@ -148,7 +148,7 @@ class BaseWorker:
         output = {self.__id_worker:{self.__id_worker:self.__output}}
         self.__global_queue_results.put(output, self.__id_worker)
         self.__job.cache.clear()
-        
+
         
     def __save_internal_data(self):
         md = '#div' if self.__workload.mod_or_div else '#mod'

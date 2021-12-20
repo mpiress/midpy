@@ -42,8 +42,8 @@ def main():
     config.WPOOL = int(sys.argv[1])
     
     wf = WorkflowInitialize()
-    descriptor = CacheDescriptor()
-    wf.start_workflow_worker(config(), descriptor)
+    cache_descriptor = CacheDescriptor()
+    wf.start_workflow_worker(config(), cache_descriptor)
     
 if __name__ == '__main__':
 
