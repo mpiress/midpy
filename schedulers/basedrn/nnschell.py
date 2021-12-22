@@ -215,7 +215,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             
             chunk     = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
-            perform = {wid:[] for wid in range(self.conn.nworkers)}
+            #perform = {wid:[] for wid in range(self.conn.nworkers)}
             
             while chunk:
                 if not wids:
@@ -241,7 +241,6 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                     idx  = t[0][0]
                     buckets[wid].append([p, idx])
                     
-                send_tasks = {wid:[] for wid in wids}
                 while chunk and wids:
                     tasks = []
                     
@@ -257,8 +256,8 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:
                             task = (t[1], chunk.pop(t[1]))
-                            #self.assign_tasks([task], self.workload.mod_or_div, wid)
-                            perform[wid].append(task)
+                            self.assign_tasks([task], self.workload.mod_or_div, wid)
+                            #perform[wid].append(task)
                             count[wid] += 1
                                 
                             if len(self.__signatures[wid]) >= self.__sigsize:
@@ -269,316 +268,11 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         if count[wid] == self.__sizeofbucket:
                             wids.remove(wid)
             
-            for wid in range(self.conn.nworkers):
-                self.assign_tasks(perform[wid], self.workload.mod_or_div, wid)
+            #for wid in range(self.conn.nworkers):
+            #    self.assign_tasks(perform[wid], self.workload.mod_or_div, wid)
 
                             
                 
-        self.set_exit()
-        self.metrics['schell_runtime'] = time.time() - start
-        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
-
-
-class NNSCHELLBYSIGNATURE2(BASENNSCHELL):
-    
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, isverbose=True):
-        
-        super(NNSCHELLBYSIGNATURE2, self).__init__(conn, workload, workers_queues, descriptor, isverbose)
-        self.__sigsize      = 1
-        self.__sizeofbucket = 1
-        self.__signatures   = {} 
-        self.__sigmanager   = {}    
-    
-    def predict(self):
-        workload = 0
-        
-        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
-        
-        start = time.time()
-
-        while workload < self.sizeof:
-            
-            chunk = OrderedDict(self.get_chunk())
-            workload += self.size_of_chunk
-            
-            while chunk:
-
-                count = [0]*self.conn.nworkers
-                
-                if len(self.__signatures) == 0:
-
-                    self.__signatures = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
-                    self.__sigmanager = {wid:[] for wid in range(self.conn.nworkers)}
-                    
-                    #define centroids
-                    sizeofslice = math.floor(len(chunk)/2)
-                    c1 = dict(list(chunk.items())[0:sizeofslice])
-                    c2 = dict(list(chunk.items())[sizeofslice:])
-                    t1, t2, idx = self.combinations(c1, c2)
-                    
-                    pred = list(zip(self.model.predict(t1, t2), idx))
-                    edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                    graph = self.generate_graph(edges)
-                    data = self.DFS(graph, len(chunk), chunk) 
-                    
-                    for wid in range(min(len(data), self.conn.nworkers)):
-                        task = data.pop(0)
-                        self.assign_tasks([task], self.workload.mod_or_div, wid)
-                        self.__signatures[wid][task[0]] = task[1]
-                        self.__sigmanager[wid].append(task[0])
-                        count[wid] += 1
-                        
-                    chunk = dict(data)
-                    
-                T1  = []
-                T2  = []
-                IDX = []
-                
-                for wid in range(min(len(chunk), self.conn.nworkers)):
-                    t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
-                    T1  += t1
-                    T2  += t2
-                    IDX += list(zip(idx, [wid]*len(idx)))
-                
-                pred    = list(zip(self.model.predict(T1, T2), IDX))
-                edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                
-                buckets  = {wid:[] for wid in range(self.conn.nworkers)}
-                
-                for p, t in edges:
-                    wid  = t[1]
-                    idx  = t[0][0]
-                    buckets[wid].append([p, idx])
-                
-                while chunk and (sum(count) < (self.__sizeofbucket * self.conn.nworkers)):
-                    tasks = []
-                    
-                    for wid in range(self.conn.nworkers):
-                        tasks.append((wid, buckets[wid].pop(0)))
-                        tasks[-1][1][0] += buckets[wid][0][0] if buckets[wid] else 0
-                    tasks = sorted(tasks, key=lambda x:x[1][0])
-                    
-                    for wid, t in tasks:
-                        idx = t[1]
-
-                        if count[wid] < self.__sizeofbucket and idx in chunk:
-                            task = (idx, chunk.pop(idx))
-                            self.assign_tasks([task], self.workload.mod_or_div, wid)
-                            count[wid] += 1
-                                
-                            if len(self.__signatures[wid]) >= self.__sigsize:
-                                key = self.__sigmanager[wid].pop(0)
-                                self.__signatures[wid].pop(key)
-                                
-                            self.__signatures[wid][task[0]] = task[1]
-                            self.__sigmanager[wid].append(task[0])
-                    
-                    
-        self.set_exit()
-        self.metrics['schell_runtime'] = time.time() - start
-        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
-
-
-class NNSCHELLBYSIGNATURE3(BASENNSCHELL):
-    
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, warmup_cache=0, isverbose=True):
-        
-        super(NNSCHELLBYSIGNATURE3, self).__init__(conn, workload, workers_queues, descriptor, warmup_cache, isverbose)
-        self.__signatures   = {wid:OrderedDict() for wid in range(self.conn.nworkers)} 
-        self.__balance      = {}
-        self.__sigsize      = warmup_cache
-        
-    def predict(self):
-        workload = 0
-        
-        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
-        
-        start = time.time()
-
-        t1 = time.time()
-        workload += self.warmup_cache(self.__signatures)
-        self.metrics['schell_warmup_cache'] = time.time() - t1    
-
-        while workload < self.sizeof:
-            
-            chunk = OrderedDict(self.get_chunk())
-            workload += self.size_of_chunk
-            
-            while chunk:
-
-                #if len(self.__signatures) < self.conn.nworkers:
-                #    wids = list(set(range(self.conn.nworkers)) - set(self.__signatures.keys()))
-                    
-                    #define centroids
-                #    c1 = dict(list(chunk.items())[0:self.__batch_size])
-                #    c2 = dict(list(chunk.items())[-self.__batch_size:])
-                #    cc = list(chunk.items())
-                #    t1, t2, idx = self.combinations(c1, c2)
-                    
-                #    pred = list(zip(self.model.predict(t1, t2), idx))
-                #    edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                #    graph = self.generate_graph(edges)
-                #    data = self.DFS(graph, len(chunk), chunk)
-                #    chunk = dict(cc)
-
-                #    cents = []
-                #    while data and wids:
-                #        task = data.pop(0)
-                #        wid  = wids.pop(0)
-                #        self.__signatures[wid] = {}
-                #        self.assign_tasks([task], self.workload.mod_or_div, wid)
-                #        self.__signatures[wid][task[0]] = task[1]
-                #        chunk.pop(task[0])
-                        
-                #else:    
-                if len(self.__balance) < self.conn.nworkers:
-                    wids = list(set(range(self.conn.nworkers)) - set(self.__balance.keys()))
-                else:
-                    self.__balance = {}
-                    wids = list(range(self.conn.nworkers))
-                
-                T1  = []
-                T2  = []
-                IDX = []
-                for wid in wids:
-                    t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
-                    T1  += t1
-                    T2  += t2
-                    IDX += list(zip(idx, [wid]*len(idx)))
-                
-                #grau de relevância global (Entropia)
-                pred    = list(zip(self.model.predict(T1, T2), IDX))
-                
-                buckets = {wid:[] for wid in wids}
-                for p, t in pred:
-                    wid  = t[1]
-                    idx  = t[0][0]
-                    buckets[wid].append([math.log2(1 + p), idx])
-                    #if(buckets[wid]):
-                    #    buckets[wid][-1][0] +=  math.log2(1 + p)
-
-                for wid in wids:
-                    buckets[wid] = sorted(buckets[wid], key=lambda x:x[0], reverse=True)
-                
-                balance_factor = []
-                while chunk: 
-
-                    if not balance_factor:
-                        balance_factor = list(range(self.conn.nworkers))
-
-                    tasks = {}
-                    for wid in balance_factor:
-                        if buckets[wid]:
-                            
-                            t = buckets[wid].pop(0)
-                            while t[1] not in chunk and buckets[wid]:
-                                t = buckets[wid].pop(0)
-
-                            if t[1] not in tasks:
-                                tasks[t[1]] = [wid, t[0]]
-                            elif tasks[t[1]][1] > t[0]:
-                                tasks[t[1]] = [wid, t[0]]
-                        
-                        else:
-                            balance_factor.pop(balance_factor.index(wid))
-                    
-                                                                
-                    for idx in tasks:
-                        wid = tasks[idx][0]
-                        task = (idx, chunk.pop(idx))
-                        self.assign_tasks([task], self.workload.mod_or_div, wid)            
-                        
-                        if len(self.__signatures[wid]) >= self.__sigsize:
-                            self.__signatures[wid].popitem(last=False)
-
-                        self.__signatures[wid][task[0]] = task[1]
-                        balance_factor.pop(balance_factor.index(wid))
-                    
-        self.set_exit()
-        self.metrics['schell_runtime'] = time.time() - start
-        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
-    
-
-class NNSCHELLBYSIGNATURE1(BASENNSCHELL):
-    
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, isverbose=True):
-        
-        super(NNSCHELLBYSIGNATURE1, self).__init__(conn, workload, workers_queues, descriptor, isverbose)
-        self.__sigsize      = 1
-        self.__sizeofbucket = 1
-        self.__signatures   = {} 
-        self.__sigmanager   = {}    
-    
-    def predict(self):
-        workload = 0
-
-        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
-        
-        start = time.time()
-        while workload < self.sizeof:
-            
-            chunk = OrderedDict(self.get_chunk())
-            workload += self.size_of_chunk
-            self.__sizeofbucket = math.ceil(len(chunk)/self.conn.nworkers)
-            
-            while chunk:
-
-                count = [0]*self.conn.nworkers
-                
-                if len(self.__signatures) == 0:
-                    self.__signatures = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
-                    self.__sigmanager = {wid:[] for wid in range(self.conn.nworkers)}
-                    
-                    #define centroids
-                    sizeofslice = math.floor(len(chunk)/2)
-                    c1 = dict(list(chunk.items())[0:sizeofslice])
-                    c2 = dict(list(chunk.items())[sizeofslice:])
-                    t1, t2, idx = self.combinations(c1, c2)
-                    
-                    pred = list(zip(self.model.predict(t1, t2), idx))
-                    edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                    graph = self.generate_graph(edges)
-                    data = self.DFS(graph, len(chunk), chunk) 
-                    
-                    for wid in range(min(len(data), self.conn.nworkers)):
-                        task = data.pop(0)
-                        self.assign_tasks([task], self.workload.mod_or_div, wid)
-                        self.__signatures[wid][task[0]] = task[1]
-                        self.__sigmanager[wid].append(task[0])
-                        count[wid] += 1
-
-                    chunk = dict(data)
-
-                T1  = []
-                T2  = []
-                IDX = []
-                
-                for wid in range(min(len(chunk), self.conn.nworkers)):
-                    t1, t2, idx = self.combinations(chunk, self.__signatures[wid])
-                    T1  += t1
-                    T2  += t2
-                    IDX += list(zip(idx, [wid]*len(idx)))
-                
-                pred    = list(zip(self.model.predict(T1, T2), IDX))
-                edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-                
-                while chunk and (sum(count) < (self.__sizeofbucket * self.conn.nworkers)):
-                    task = edges.pop(0)
-                    wid  = task[1][1]
-                    idx  = task[1][0][0]
-                    if count[wid] < self.__sizeofbucket and idx in chunk:
-                        task = (idx, chunk.pop(idx))
-                        self.assign_tasks([task], self.workload.mod_or_div, wid)
-                        count[wid] += 1
-                            
-                        if len(self.__signatures[wid]) >= self.__sigsize:
-                            key = self.__sigmanager[wid].pop(0)
-                            self.__signatures[wid].pop(key)
-                            
-                        self.__signatures[wid][task[0]] = task[1]
-                        self.__sigmanager[wid].append(task[0])
-                    
-                    
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
         print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
