@@ -48,7 +48,7 @@ class config:
     
     TEST                    = PATH_DATASET+'nscale.test'
     TRAIN                   = PATH_DATASET+'nscale.train'
-    OUTPUT_PATH             = '../../../results/nscale/'
+    OUTPUT_PATH             = '../../../tmp/'
     
     SIZE_OF_CHUNK           = [2160]
     SIZE_OF_BUCKET          = 1

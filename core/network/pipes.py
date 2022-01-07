@@ -38,7 +38,7 @@ import time, socket
 
 import Pyro4
 from Pyro4.naming import startNSloop, locateNS
-Pyro4.config.COMPRESSION = False
+Pyro4.config.COMPRESSION = True
 Pyro4.config.METADATA = False
 Pyro4.config.SOCK_REUSE = False
 Pyro4.config.THREADPOOL_SIZE = 8192
@@ -51,7 +51,6 @@ PROXIES = {}
 #                                            REMOTE OBJECT CLASSES                                           #
 ##############################################################################################################
 
-#@Pyro4.behavior(instance_mode="single")
 class LookupWids:
 
     def __init__(self, nworkers, wpool):
@@ -72,7 +71,6 @@ class LookupWids:
         return self.__wids[execution_id].get()
         
 
-#@Pyro4.behavior(instance_mode="single")
 class ResultQueues:
     def __init__(self, nworkers):
         self.__tasks = {k:Queue() for k in range(nworkers)}
@@ -98,7 +96,6 @@ class ResultQueues:
         return self.__tasks[wid].empty()
 
 
-#@Pyro4.behavior(instance_mode="single")
 class TaskQueues:
     def __init__(self):
         self.__tasks = Queue()
@@ -124,8 +121,6 @@ class TaskQueues:
         return self.__tasks.empty()
     
 
-
-#@Pyro4.behavior(instance_mode="single")
 class WorkerInfo:
     
     def __init__(self, nworkers):
@@ -165,7 +160,7 @@ class WorkerInfo:
 ##############################################################################################################
 
 def waiting_named_server(conn, isverbose):
-    print('[INFO]: waiting for named server to start in ',conn.server, ' in the port ', conn.port) if isverbose else None
+    print('[INFO]: waiting for named server to start in the port ', conn.port) if isverbose else None
     while True:
         try:
             if os.path.exists(constants.BUFFER + 'server.csv'):
