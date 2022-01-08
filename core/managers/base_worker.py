@@ -67,10 +67,12 @@ class BaseWorker:
         lasttask = []
         
         print('[INFO]: Worker ', self.__id_worker, ' started with ', self.__job.cache.size(), ' rules cached') if self.__isverbose else None
+        print('[INFO]: Worker ', self.__id_worker, ' waiting jobs') if self.__isverbose else None
         task = self.__tasks.get()
         
         while task[0] != 'EXIT':
             t1 = time.time()
+            print('[INFO]: Worker ', self.__id_worker, ' performing job received') if self.__isverbose else None
             rules = self.__cache_descriptor.processing(task[1])
             
             for r in rules:
@@ -86,6 +88,8 @@ class BaseWorker:
                 print('t1:', len(lasttask[1]), 't2:', len(tmp), 'value:', value)
                 
             lasttask = (task[0], tmp, task[1])
+
+            print('[INFO]: Worker ', self.__id_worker, ' waiting next job') if self.__isverbose else None
             task = self.__tasks.get()
             
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None

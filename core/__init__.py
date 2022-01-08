@@ -33,6 +33,7 @@ from core.network.pipes import start_named_server, waiting_named_server
 from core.network.pipes import lookup, obj_finalize
 
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper, CacheWrapper
+from containers import constants
 
 import time
 
@@ -60,11 +61,15 @@ class WorkflowManager:
         self.__conn = conn
         
         if self.__master == None:
-            self.init_server_name(conn) 
+            print("[INFO]: Start master queues to manage jobs")  if constants.VERBOSEMODE else None
+            self.init_server_name(conn)
+            print("[INFO]: Waiting for nameserver to start.")  if constants.VERBOSEMODE else None 
             waiting_named_server(conn, isverbose)
+            print("[INFO]: Start master workflow to distribute jobs.")  if constants.VERBOSEMODE else None 
             self.__master = BaseMaster(conn, workload, schell, descriptor, isverbose)
             self.__generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
 
+        print("[INFO]: Initiating wids queue to manage execution..")  if constants.VERBOSEMODE else None
         self.__generate_wid.set(execution_id)
         self.__times['orchestrator_runtime'], self.__times['taskmanager_runtime'] = self.__master.processing(output, execution_id[-1])
 
@@ -72,14 +77,20 @@ class WorkflowManager:
         
     def workerpool_init(self, job, conn:NetworkWrapper, workload:WorkloadWrrapper, cache:CacheWrapper, schell=None, descriptor=None, output_path=None, execution_id=None, isverbose=False):
         self.__id_worker = None
+        
+        print("[INFO]: Waiting for nameserver to start by the master.")  if constants.VERBOSEMODE else None 
         conn.server = waiting_named_server(conn, isverbose)
+
+        print("[INFO]: Lookup wids queue to manage execution..")  if constants.VERBOSEMODE else None
         generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
         
+        print("[INFO]: Get wid to manage execution..")  if constants.VERBOSEMODE else None
         self.__id_worker = generate_wid.get(execution_id)
 
         while self.__id_worker != 'EXIT':
             
             if self.__id_worker != 'WAIT':
+                print("[INFO]: Start worker workflow to execute jobs.")  if constants.VERBOSEMODE else None 
                 self.__slave = BaseWorker(job, conn, workload, cache, self.__id_worker, schell, descriptor, output_path, isverbose)
                 self.__slave.update_wid(self.__id_worker)
                 self.__times['workerpool_runtime'] = self.__slave.processing()

@@ -71,6 +71,7 @@ class BaseMaster():
     def __start_scheduler(self, warmup_cache):
         print('[INFO]: prepare scheduler strategy') if self.__isverbose else None
         dispatcher = Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, warmup_cache, self.__isverbose)
+        print('[INFO]: Executing schedulling into input data set') if self.__isverbose else None
         dispatcher.schedulling()
         return dispatcher.get_metrics()
         
