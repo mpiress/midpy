@@ -24,12 +24,11 @@
 @endcond
 
 """
+from containers import constants
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper
 from multiprocessing.managers import BaseManager
 
-import math, csv, time
-
-from containers import constants
+import math, csv
 
 class SchedulerManager(BaseManager):
     
@@ -43,7 +42,7 @@ class SchedulerManager(BaseManager):
         self.sizeof             = self.descriptor.sizeof()
         self.metrics            = {'schell_runtime':0, 'generate_train_nn':0, 'workload':self.sizeof, 'workload_wid':{wid:[] for wid in range(self.conn.nworkers)}}
         self.size_of_chunk      = workload.overview['chunk']
-        self.__warmup_cache     = warmup_cache
+        self.warmup             = warmup_cache
         self.__workers_queues   = workers_queues
         self.__dataindex        = 0
 
@@ -57,23 +56,26 @@ class SchedulerManager(BaseManager):
     def warmup_cache(self, sig=None):
         wid = 0
         wpc = 0
-        
-        if (self.conn.nworkers * self.__warmup_cache) > self.sizeof:
+
+        if (self.conn.nworkers * self.warmup) > self.sizeof:
             print("[ERROR]: CACHE WARM UP NOT EXECUTED BECAUSE THE DATASET SIZEOF IS SMALLER THAN SUCH A STAGE")
             exit(1)
+
         else:
             while wid < self.conn.nworkers and self.__dataindex < self.sizeof:
                 tam = 0
-                while tam < self.__warmup_cache:
+                while tam < self.warmup:
                     query = self.descriptor.readline()
                     query = [self.__dataindex, query]
                     self.__dataindex += 1
                     self.assign_tasks([query], self.workload.mod_or_div, wid)
+                    
                     if sig != None and wid in sig:
                         sig[wid][query[0]] = query[1]
                     tam += 1
                 wid += 1
                 wpc += tam
+                
         return wpc
 
 
@@ -96,7 +98,7 @@ class SchedulerManager(BaseManager):
     def assign_tasks(self, dataset, div=True, wid=None):
         workload = 0
         
-        if wid:
+        if wid != None:
             for query in dataset:
                 self.__workers_queues[wid].put(query)
                 self.metrics['workload_wid'][wid].append(query[0])
@@ -148,6 +150,8 @@ class SchedulerManager(BaseManager):
                     wid += 1
         
              
+
+    
     def predict(self):
         """!
         @brief Method implemented by scheduler policies to predict the queries order

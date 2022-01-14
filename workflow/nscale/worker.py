@@ -32,7 +32,7 @@ path = path[0:path.find('MidPy') + 5]
 sys.path.append(path)
 
 from workflow import WorkflowInitialize
-from workflow.nscale.scripts.config import config
+from workflow.nscale.scripts.config1 import config
 from workflow.nscale.scripts.descriptor import CacheDescriptor
 
 from concurrent import futures

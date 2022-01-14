@@ -30,7 +30,7 @@ from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper
 
 from neural_network.siamese import SIAMESE
 import time, math
-import time, random 
+import time, random, csv
 
 from collections import OrderedDict
 from itertools import combinations, permutations
@@ -203,7 +203,9 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
         workload = 0
         count = []
         wids  = []
-        
+        #data_tmp = {wid:[] for wid in range(self.conn.nworkers)}
+        #file = "/home/michel/Doutorado/tmp/datasets/nscale_" + str(self.conn.nworkers) + "w" + str(self.warmup) + ".csv"
+
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         t1 = time.time()
@@ -215,7 +217,6 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             
             chunk     = OrderedDict(self.get_chunk())
             workload += self.size_of_chunk
-            #perform = {wid:[] for wid in range(self.conn.nworkers)}
             
             while chunk:
                 if not wids:
@@ -257,7 +258,10 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         if count[wid] < self.__sizeofbucket and t[1] in chunk:
                             task = (t[1], chunk.pop(t[1]))
                             self.assign_tasks([task], self.workload.mod_or_div, wid)
-                            #perform[wid].append(task)
+                            
+                            #TEMPORÁRIO, REMOVER DEPOIS LINHA ABAIXO....
+                            #data_tmp[wid].append(task[1])
+                            
                             count[wid] += 1
                                 
                             if len(self.__signatures[wid]) >= self.__sigsize:
@@ -268,16 +272,18 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                         if count[wid] == self.__sizeofbucket:
                             wids.remove(wid)
             
-            #for wid in range(self.conn.nworkers):
-            #    self.assign_tasks(perform[wid], self.workload.mod_or_div, wid)
-
-                            
                 
         self.set_exit()
         self.metrics['schell_runtime'] = time.time() - start
         print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
 
-
+        #TEMPORÁRIO, REMOVER DEPOIS LINHA ABAIXO....
+        #with open(file, 'a', newline='') as csvfile:
+        #    writer = csv.writer(csvfile, delimiter=',')
+        #    for wid in range(self.conn.nworkers):
+        #        for t in data_tmp[wid]:
+        #            writer.writerow(t)
+        
 
 class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
     

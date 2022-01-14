@@ -26,6 +26,10 @@ class ReaderDescriptor(BaseReaderDescriptor):
         params = self.dataFrame[self.dataFrame.index == idx].values.tolist()[0]
         return params
     
+    def readlineidx(self, idx):
+        params = self.dataFrame[self.dataFrame.index == idx].values.tolist()[0]
+        return params
+    
     def clear_all(self):
         del(self.dataFrame)
         del(self.index)

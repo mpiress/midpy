@@ -31,7 +31,7 @@ from schedulers.batch.round_robin import RoundRobin
 from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYSIGNATURE
+from schedulers.basedrn.nnschell_RR import NNSCHELLBYSIGNATURE
 
 from cache.replacement_policies.lru import LRU
  

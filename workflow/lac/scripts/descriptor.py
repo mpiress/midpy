@@ -30,6 +30,12 @@ class ReaderDescriptor(BaseReaderDescriptor):
         params = [round(x, 4) for x in params]
         return params
     
+    def readlineidx(self, idx):
+        params = self.dataFrame[self.dataFrame.index == idx].values.tolist()[0]
+        params = [round(x, 4) for x in params]
+        return params
+
+
     def clear_all(self):
         del(self.dataFrame)
         del(self.index)

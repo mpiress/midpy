@@ -32,6 +32,8 @@ from core import WorkflowManager
 
 import socket, os, shutil
 
+from schedulers.batch.round_robin import RoundRobin
+
 __local_path__ = workflow.__path__[0] + os.sep
 
 def get_local_path():
@@ -97,6 +99,18 @@ class WorkflowInitialize:
         
 
     ###############################################################################################################
+    #                                      WORKFLOW TO NEURAL NETWORK INTO CPU                                    #
+    ###############################################################################################################
+    def __change_execution_mode(self, schel, capacity, config):
+        
+        if schel.__name__.lower() == "nnschellbysignature":
+            path = config.PATH_DATASET + "NeuralNetwork/" + config.BASE_FILE_NAME+'_' + str(config.NWORKERS)+"w"+str(capacity)+".csv"
+            file = '/var/tmp/'+str(config.NWORKERS)+"w"+str(capacity)+".csv"
+            shutil.copyfile(path, file)
+            
+
+
+    ###############################################################################################################
     #                                           WORKFLOW INITIALIZATION                                           #
     ###############################################################################################################
 
@@ -117,7 +131,7 @@ class WorkflowInitialize:
         config.TEST = file
 
         descriptor.set_path(config.TEST)
-
+        
         for cache_type in config.CACHE_TYPE:
             for schel in config.SCHEDULERS:
                 for chunk in config.SIZE_OF_CHUNK:
@@ -126,6 +140,9 @@ class WorkflowInitialize:
                             print('================================================================================================')
                             print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' metric')
                             print('================================================================================================')
+                        
+                        self.__change_execution_mode(schel, capacity, config)
+
                         self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_scheduller_wrapper(schel)
                         mod = '#div' if config.MOD_OR_DIV_SCHELL else '#mod' 
