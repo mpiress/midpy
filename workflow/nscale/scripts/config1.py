@@ -49,7 +49,7 @@ class config:
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1] #[1, 2, 3, 4]
+    CACHE_CAPACITY          = [1, 2, 3, 4]
     CACHE_DIV_WORKERS       = False
 
     SERVER_PORT             = 32010
