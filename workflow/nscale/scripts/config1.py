@@ -26,8 +26,15 @@
 """
 
 from containers import constants
-from schedulers.basedrn.nnschell_RR import  NNSCHELLBYSIGNATURE
+
+from schedulers.batch.round_robin import RoundRobin
+from schedulers.batch.feature_rank import FeatureRank
+from schedulers.batch.neighbourhood_rank import NeighborhoodRank
+from schedulers.batch.kmeans_rank import KMeansRank
+from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE
+
 from cache.replacement_policies.lru import LRU
+
 from applications.nscale.nscale import NSCALE
 
 import shutil
@@ -45,7 +52,7 @@ class config:
     
     SIZE_OF_CHUNK           = [2160]
     SIZE_OF_BUCKET          = 1
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE] 
+    SCHEDULERS              = [RoundRobin] 
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
@@ -62,4 +69,3 @@ class config:
         shutil.copyfile(origem, file)
         self.__job = NSCALE(file, '/var/tmp/output.png')
         return self.__job
-
