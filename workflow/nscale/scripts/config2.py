@@ -26,15 +26,8 @@
 """
 
 from containers import constants
-
-from schedulers.batch.round_robin import RoundRobin
-from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
-from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYKCLUSTERS, NNSCHELLFORALL, NNSCHELLBYSIGNATURE
-
 from cache.replacement_policies.lru import LRU
-
 from applications.nscale.nscale import NSCALE
 
 import shutil
