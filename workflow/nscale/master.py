@@ -32,7 +32,7 @@ sys.path.append(path)
 
 
 from workflow import WorkflowInitialize
-from workflow.nscale.scripts.config1 import config
+from workflow.nscale.scripts.config import config
 from workflow.nscale.scripts.descriptor import ReaderDescriptor
 
 if __name__ == '__main__':
