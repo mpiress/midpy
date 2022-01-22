@@ -141,7 +141,7 @@ class WorkflowInitialize:
                             print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' metric')
                             print('================================================================================================')
                         
-                        self.__change_execution_mode(schel, capacity, config)
+                        #self.__change_execution_mode(schel, capacity, config)
 
                         self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
                         self.set_scheduller_wrapper(schel)

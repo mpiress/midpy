@@ -27,7 +27,7 @@
 
 from containers import constants
 
-from schedulers.basedrn.nnschell_RR import  NNSCHELLBYSIGNATURE
+from schedulers.basedrn.nnschell import  NNSCHELLBYSIGNATURE
 from cache.replacement_policies.lru import LRU
 from applications.lac.lac import LAC
 
@@ -48,7 +48,7 @@ class config:
     MOD_OR_DIV_SCHELL       = constants.DIV
 
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1, 2, 3, 4] 
+    CACHE_CAPACITY          = [1]#[1, 2, 3, 4] 
     CACHE_DIV_WORKERS       = False
 
     SERVER_PORT             = 32000

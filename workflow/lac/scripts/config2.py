@@ -27,14 +27,8 @@
 
 from containers import constants
 
-from schedulers.batch.round_robin import RoundRobin
-from schedulers.batch.feature_rank import FeatureRank
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
-from schedulers.batch.kmeans_rank import KMeansRank
-from schedulers.basedrn.nnschell import NNSCHELLBYSIGNATURE
-
 from cache.replacement_policies.lru import LRU
- 
 from applications.lac.lac import LAC
 
 class config:
@@ -58,8 +52,8 @@ class config:
     CACHE_DIV_WORKERS       = False
 
     SERVER_PORT             = 32000
-    NWORKERS                = 128
-    WPOOL                   = 128
+    NWORKERS                = 1
+    WPOOL                   = 1
 
     def get_job(self):
         self.__job = LAC(config.TRAIN, 4, 0, 0)
