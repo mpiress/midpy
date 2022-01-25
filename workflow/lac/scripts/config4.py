@@ -31,6 +31,8 @@ from schedulers.basedrn.nnschell_RR import  NNSCHELLBYSIGNATURE
 from cache.replacement_policies.lru import LRU
 from applications.lac.lac import LAC
 
+import shutil
+
 class config:
     
     BASE_FILE_NAME          = 'lac'
@@ -56,5 +58,7 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = LAC(config.TRAIN, 4, 0, 0)
+        file   = '/var/tmp/census.train'
+        shutil.copyfile(config.TRAIN, file)
+        self.__job = LAC(file, 4, 0, 0)
         return self.__job
