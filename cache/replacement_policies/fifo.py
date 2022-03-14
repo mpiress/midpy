@@ -26,7 +26,7 @@
 """
 
 from cache.base_cache import Cache
-
+import time
 
 class FIFO(Cache):
 
@@ -34,29 +34,49 @@ class FIFO(Cache):
         super(FIFO, self).__init__(wid, capacity)
         self.__isverbose = True
         
-    def get(self, key):
-        if self.capacity > 0:
+    def get(self, key, depth=0):
+        if self.max_capacity > 0:
             try:
-                v = self.cache[key] 
+                t1 = time.time()
+                v = self.cache[key]
                 self.add_used_rules(key)
-                return v 
+                self.add_memory_reused(v[1])
+                self.add_depth_param_reused(depth)
+                self.task_cache.add(key)
+                self.hits += 1
+                self.time += (time.time() - t1)
+                return v[0]
             except:
                 return -1
-        return -1
-            
-    def set(self, key, value):
-        if self.capacity > 0:
-            self.add_produced_rule(key)
-            if not self.lock:
-                self.cache[key] = value
-            
-            elif self.capacity != -1:
-                k = self.cache.popitem(last=False)
-                self.add_discard(k[0])
-                self.cache[key] = value
-                if self.__isverbose:
-                    print('[INFO]: maximum cache space in bytes:', self.get_capacity_in_bytes())
-                    print('[INFO]: maximum cache space in rules:', self.size())
-                    self.__isverbose = False
-                
+        return -1    
 
+    def set(self, key, value, memory=0, depth=0):
+        
+        t1 = time.time()
+        self.task_cache.add(key)
+        self.add_memory_needed(memory)
+        self.add_depth_param_needed(depth)
+        
+        if self.max_capacity > 0:
+            self.add_produced_rule(key)
+
+            if (self.capacity_in_bytes + memory) < self.max_capacity:
+                self.cache[key] = (value, memory)
+                self.add_capacity_in_bytes(memory)
+
+            else:
+                
+                discard = self.cache.popitem()
+                self.add_discard(discard[0])
+                self.sub_capacity_in_bytes(discard[1][1])
+
+                while (self.capacity_in_bytes + memory) > self.max_capacity:
+                    discard = self.cache.popitem()
+                    self.add_discard(discard[0])
+                    self.sub_capacity_in_bytes(discard[1][1])
+                
+                self.cache[key] = (value, memory)
+                self.add_capacity_in_bytes(memory)
+
+            self.missing += 1
+        self.time += (time.time() - t1)

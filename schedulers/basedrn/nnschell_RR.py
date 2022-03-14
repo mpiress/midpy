@@ -27,20 +27,24 @@
 
 
 from schedulers.base_scheduler import SchedulerManager
-from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 import ast
 
 import time
 
+from collections import OrderedDict
 
-class NNSCHELLBYSIGNATURE(SchedulerManager):
+
+class NNSCHELLBYSIGNATURE1B(SchedulerManager):
     '''
     @brief NNSCHELLBYSIGNATURERR Round Robin Version Scheduler Policy
     '''
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
         
-        super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
+        super(NNSCHELLBYSIGNATURE1B, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
+        
+        self.__signatures   = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
         
         if self.isverbose:
             print('[INFO]: executing NNSCHELLBYSIGNATURE scheduler for ', self.sizeof ,' tasks')
@@ -52,8 +56,56 @@ class NNSCHELLBYSIGNATURE(SchedulerManager):
         workload = 0
 
         t1 = time.time()
+        self.warmup_cache(self.__signatures)
+        self.metrics['schell_warmup_cache'] = time.time() - t1  
+
+        t1 = time.time()
         data = None 
-        file = "/var/tmp/"+str(self.conn.nworkers)+"w"+str(self.warmup)+".csv"
+        file = "/var/tmp/"+str(self.conn.nworkers)+"w1.csv"
+        with open(file, "r") as fp:
+            for l in fp:
+                data = ast.literal_eval(l)
+        
+        for wid in data:
+            chunk = []
+
+            for idx in data[wid]:
+                chunk.append([idx, self.descriptor.readlineidx(idx)])
+            
+            self.assign_tasks(chunk, self.workload.mod_or_div, wid) 
+        
+        self.set_exit()
+        
+        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
+            
+
+class NNSCHELLBYSIGNATURE5B(SchedulerManager):
+    '''
+    @brief NNSCHELLBYSIGNATURERR Round Robin Version Scheduler Policy
+    '''
+
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
+        
+        super(NNSCHELLBYSIGNATURE5B, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
+        
+        self.__signatures   = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
+
+        if self.isverbose:
+            print('[INFO]: executing NNSCHELLBYSIGNATURE scheduler for ', self.sizeof ,' tasks')
+        
+    
+    def predict(self):
+        
+        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
+        workload = 0
+
+        t1 = time.time()
+        self.warmup_cache(self.__signatures)
+        self.metrics['schell_warmup_cache'] = time.time() - t1  
+
+        t1 = time.time()
+        data = None 
+        file = "/var/tmp/"+str(self.conn.nworkers)+"w5.csv"
         with open(file, "r") as fp:
             for l in fp:
                 data = ast.literal_eval(l)

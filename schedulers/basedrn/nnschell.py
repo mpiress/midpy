@@ -26,11 +26,10 @@
 """
 
 from schedulers.base_scheduler import SchedulerManager
-from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 
 from neural_network.siamese import SIAMESE
 import time, math
-import time, random, csv
 
 from collections import OrderedDict
 from itertools import combinations, permutations
@@ -43,13 +42,14 @@ from igraph import Graph
 
 class BASENNSCHELL(SchedulerManager):
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, warmup_cache=0, isverbose=True):
-        super(BASENNSCHELL, self).__init__(conn, workload, workers_queues, descriptor, warmup_cache, isverbose)
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup,  isverbose=True):
+        super(BASENNSCHELL, self).__init__(conn, workload, schell, tasks, descriptor, warmup,  isverbose)
         self.model = SIAMESE(descriptor=descriptor, job=workload.job_name)
     
     def generate_graph(self, edges):
         graph = OrderedDict()
         for p, v in edges:
+            v = v[0]
             if v[0] not in graph:
                 graph[v[0]] = list()
             if v[1] not in graph:
@@ -62,9 +62,10 @@ class BASENNSCHELL(SchedulerManager):
     
     def __dfs_visit(self, data, graph, visited, t1, sizeof, chunk):
         if t1 not in visited:
-            task = (t1, chunk.pop(t1))
-            data.append(task)
-            sizeof -= 1
+            if isinstance(t1, int):
+                task = (t1, chunk.pop(t1))
+                data.append(task)
+                sizeof -= 1
             visited.append(t1)
             for neighbour in graph[t1]:
                 if neighbour not in visited:
@@ -167,12 +168,10 @@ class BASENNSCHELL(SchedulerManager):
     def neighborhoodRank_local_coordinate(self, dataset):
         edges = []
         codec = {}
-        idf    = {}
         code = 0
         
         for query in dataset:
             query = list(enumerate(query[1]))
-            tmp   = []
             for v in query:
                 if v not in codec:
                     codec[v] = code
@@ -181,7 +180,6 @@ class BASENNSCHELL(SchedulerManager):
         
         G = Graph(edges)
         attr_count = dict(enumerate(G.pagerank()))
-        local_weight = sum(attr_count.values())
         
         outputset = {}
         for index, query in dataset:
@@ -192,24 +190,24 @@ class BASENNSCHELL(SchedulerManager):
 
 class NNSCHELLBYSIGNATURE(BASENNSCHELL):
     
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, warmup_cache=0, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
         
-        super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, workers_queues, descriptor, warmup_cache, isverbose)
-        self.__sigsize      = warmup_cache
+        super(NNSCHELLBYSIGNATURE, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
+
         self.__sizeofbucket = self.workload.overview['bucket']
         self.__signatures   = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
+
         
     def predict(self):
         workload = 0
         count = []
         wids  = []
-        #data_tmp = {wid:[] for wid in range(self.conn.nworkers)}
-        #file = "/home/michel/Doutorado/tmp/datasets/nscale_" + str(self.conn.nworkers) + "w" + str(self.warmup) + ".csv"
-
-        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
+        
+        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s) in buckets of ', self.__sizeofbucket) if self.isverbose else None
+        print('[INFO]: start cache signature with size of ', self.schell.sig_size) if self.isverbose else None
         
         t1 = time.time()
-        workload += self.warmup_cache(self.__signatures)
+        self.warmup_cache(self.__signatures)
         self.metrics['schell_warmup_cache'] = time.time() - t1    
 
         start = time.time()
@@ -219,6 +217,7 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
             workload += self.size_of_chunk
             
             while chunk:
+
                 if not wids:
                     count = [0]*self.conn.nworkers
                     wids  = [wid for wid in range(self.conn.nworkers)]
@@ -236,26 +235,34 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                 pred    = list(zip(self.model.predict(T1, T2), IDX))
                 edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
                 
-                buckets     = {wid:[] for wid in wids}
+                buckets     = {wid:None for wid in wids}
                 for p, t in edges:
                     wid  = t[1]
                     idx  = t[0][0]
-                    buckets[wid].append([p, idx])
+                    if buckets[wid] == None:
+                        buckets[wid] = [[p, idx]]
+                    else:
+                        buckets[wid].append([p+buckets[wid][-1][0], idx])
+                       
+                    
+
                     
                 while chunk and wids:
                     tasks = []
-                    
-                    for wid in wids:
-                        tasks.append((wid, buckets[wid].pop(0)))
-                        tasks[-1][1][0] = math.log2(1 + tasks[-1][1][0] + buckets[wid][0][0]) if buckets[wid] else 0
-                    tasks = sorted(tasks, key=lambda x:x[1][0])
-                    
-                    tam = math.ceil(len(tasks)/self.conn.nworkers)
+                    tam = math.ceil(len(chunk)/self.conn.nworkers)
                     self.__sizeofbucket = self.__sizeofbucket if  tam >= self.__sizeofbucket else tam
 
+                    for wid in wids:
+                        tmp = 0
+                        while buckets[wid] and tmp < self.__sizeofbucket:
+                            tasks.append((wid, buckets[wid].pop(0)))
+                            tmp += 1
+
+                    tasks = sorted(tasks, key=lambda x:x[1][0])
+                    
                     for wid, t in tasks:
                         
-                        if count[wid] < self.__sizeofbucket and t[1] in chunk:
+                        if count[wid] < self.__sizeofbucket and t[1] in chunk and wid in wids:
                             task = (t[1], chunk.pop(t[1]))
                             self.assign_tasks([task], self.workload.mod_or_div, wid)
                             
@@ -264,12 +271,12 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
                             
                             count[wid] += 1
                                 
-                            if len(self.__signatures[wid]) >= self.__sigsize:
+                            if len(self.__signatures[wid]) >= self.schell.sig_size:
                                 self.__signatures[wid].popitem(last=False)
 
                             self.__signatures[wid][task[0]] = task[1]
                             
-                        if count[wid] == self.__sizeofbucket:
+                        if count[wid] >= self.__sizeofbucket and wid in wids:
                             wids.remove(wid)
             
                 
@@ -287,9 +294,10 @@ class NNSCHELLBYSIGNATURE(BASENNSCHELL):
 
 class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
     
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
-        super(NNSCHELLBYKCLUSTERS, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
-        self.__kcentroids   = 25 
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
+        
+        super(NNSCHELLBYKCLUSTERS, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
+        self.__centroids   = {wid:OrderedDict() for wid in range(self.conn.nworkers)}
         
 
     def predict(self):
@@ -298,7 +306,7 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         t1 = time.time()
-        workload += self.warmup_cache()
+        self.warmup_cache(self.__centroids)
         self.metrics['schell_warmup_cache'] = time.time() - t1  
 
         start = time.time()
@@ -307,30 +315,26 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
             workload += self.size_of_chunk
             
             tp = time.time()
-            
-            #define centroids
-            sizeofslice = math.floor(len(chunk)/2)
-            c1 = dict(list(chunk.items())[0:sizeofslice])
-            c2 = dict(list(chunk.items())[sizeofslice:])
-            t1, t2, idx = self.combinations(c1, c2)
-            
-            pred = list(zip(self.model.predict(t1, t2), idx))
-            edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-            graph = self.generate_graph(edges)
-            data = self.DFS(graph, len(chunk), chunk)    
-            
-            chunk = dict(data)
+            T1  = []
+            T2  = []
+            IDX = []
 
-            t1, t2, idx = self.combinations(dict(data[self.__kcentroids:]), dict(data[0:self.__kcentroids]))
-            pred = list(zip(self.model.predict(t1, t2), idx))
-            edges  = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
-            graph = self.generate_graph(edges)
-            data = self.DFS(graph, len(chunk), chunk)    
+            for wid in range(self.conn.nworkers):
+                t1, t2, idx = self.combinations(chunk, self.__centroids[wid])
+                T1  += t1
+                T2  += t2
+                IDX += list(zip(idx, [wid]*len(idx)))
+            
+            pred    = list(zip(self.model.predict(T1, T2), IDX))
+            edges   = list(sorted(pred, key=lambda x:x[0], reverse=True)) 
+            
+            graph       = self.generate_graph(edges)
+            chunk       = self.DFS(graph, len(chunk), chunk) 
             
             self.metrics['predict'] = time.time() - tp if 'predict' not in self.metrics else self.metrics['predict'] + (time.time() - tp)
             
             t1 = time.time()
-            self.assign_tasks(data, self.workload.mod_or_div)
+            self.assign_tasks(chunk, self.workload.mod_or_div)
             self.metrics['send_tasks'] = time.time() - t1 if 'send_tasks' not in self.metrics else self.metrics['send_tasks'] + (time.time() - t1)
 
         self.set_exit()
@@ -340,8 +344,8 @@ class NNSCHELLBYKCLUSTERS(BASENNSCHELL):
 
 class NNSCHELLFORALL(BASENNSCHELL):
     
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
-        super(NNSCHELLFORALL, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
+        super(NNSCHELLFORALL, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
         
     def predict(self):
         workload = 0
@@ -349,7 +353,7 @@ class NNSCHELLFORALL(BASENNSCHELL):
         print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
         
         t1 = time.time()
-        workload += self.warmup_cache()
+        self.warmup_cache()
         self.metrics['schell_warmup_cache'] = time.time() - t1  
 
         start = time.time()

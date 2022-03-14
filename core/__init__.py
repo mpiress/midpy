@@ -47,6 +47,7 @@ class WorkflowManager:
         self.__id_worker       = None
         self.__conn            = None
         self.__generate_wid    = None
+        self.__semaphore       = None
         self.__times           = {'orchestrator_runtime':0, 'taskmanager_runtime':0, 'workerpool_runtime':0}
     
     def init_server_name(self, conn:NetworkWrapper):
@@ -57,7 +58,7 @@ class WorkflowManager:
         obj_finalize(self.__conn, self.__master.get_daemons())
         os.kill(self.__server.pid, signal.SIGKILL)
         
-    def taskmanager_init(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, output, execution_id=None, isverbose=False):
+    def taskmanager_init(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, warmup, output, execution_id=None, isverbose=False):
         self.__conn = conn
         
         if self.__master == None:
@@ -66,7 +67,7 @@ class WorkflowManager:
             print("[INFO]: Waiting for nameserver to start.")  if constants.VERBOSEMODE else None 
             waiting_named_server(conn, isverbose)
             print("[INFO]: Start master workflow to distribute jobs.")  if constants.VERBOSEMODE else None 
-            self.__master = BaseMaster(conn, workload, schell, descriptor, isverbose)
+            self.__master = BaseMaster(conn, workload, schell, descriptor, warmup, isverbose)
             self.__generate_wid = lookup(conn=conn, uri='global.queues.lookup_wids')
 
         print("[INFO]: Initiating wids queue to manage execution..")  if constants.VERBOSEMODE else None
@@ -95,6 +96,7 @@ class WorkflowManager:
                 self.__slave.update_wid(self.__id_worker)
                 self.__times['workerpool_runtime'] = self.__slave.processing()
             
+            generate_wid.set_semaphore(execution_id, self.__id_worker)
             self.__id_worker = generate_wid.get(execution_id)
             
         return True

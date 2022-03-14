@@ -30,7 +30,7 @@ import warnings
 warnings.warn = warn
 
 from schedulers.base_scheduler import SchedulerManager
-from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
@@ -39,7 +39,6 @@ from igraph import Graph
 import time, math
 import pandas as pd
 import numpy as np
-import networkx as nx
 
 
 
@@ -48,7 +47,7 @@ class KMeansRank(SchedulerManager):
     @brief Round Robin Scheduler Policy
     '''
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
         
         """!
         @brief Constructor of KMeans scheduler.
@@ -60,7 +59,7 @@ class KMeansRank(SchedulerManager):
                 
         @see base_scheduler
         """
-        super(KMeansRank, self).__init__(conn, workload, tasks, descriptor, isverbose)
+        super(KMeansRank, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
         
         if self.isverbose:
             print('[INFO]: executing KMeans scheduler to manage tasks')

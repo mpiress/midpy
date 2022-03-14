@@ -29,11 +29,11 @@ from containers.wrapper.wrappers import SchedulerWrapper, WorkloadWrrapper, Netw
 
 class Orchestrator:
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, workers_queues=None, descriptor=None, warmup_cache=0, isverbose=False):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, workers_queues=None, descriptor=None, warmup=None, isverbose=False):
         self.__isverbose = isverbose
         print('[INFO]: instantiating scheduler policy') if isverbose else None
         scheduler_policy = type('Scheduler', (schell.type_scheduler,), {})
-        self.__scheduler = scheduler_policy(conn, workload, workers_queues, descriptor, warmup_cache, isverbose)
+        self.__scheduler = scheduler_policy(conn, workload, schell, workers_queues, descriptor, warmup, isverbose)
         
     def get_scheduler(self):
         return self.__scheduler

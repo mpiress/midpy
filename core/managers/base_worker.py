@@ -28,6 +28,7 @@
 from core.managers.worker import Worker
 from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, CacheWrapper
 from core.network.pipes import lookup
+from containers import constants
 
 import socket, time, csv
 
@@ -95,6 +96,7 @@ class BaseWorker:
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
         self.__train_nn.put('EXIT', self.__id_worker)
 
+    
     def __execute_tasks(self):
         sworkload = 0
         lasttask = []
@@ -104,8 +106,11 @@ class BaseWorker:
         task = self.__tasks.get()
         start = time.time()
         ttmp = 0
+        twait = 0
+        
         
         while task[0] != 'EXIT':
+
             hits     = self.__job.cache.get_hits()
             missing  = self.__job.cache.get_missing()
             
@@ -126,28 +131,27 @@ class BaseWorker:
                 self.__output['evaluate_cache_similarity'] = (time.time() - t2) if 'evaluate_cache_similarity' not in self.__output else (self.__output['evaluate_cache_similarity'] + (time.time() - t2))           
                 
             lasttask = (task, tmp, ttmp)
+            tw = time.time()
             task = self.__tasks.get()
-            
+            twait += (time.time() - tw)
             self.__job.cache.clear_evaluations()
-            
-            if sworkload == self.__job.cache.get_capacity():
-                self.__job.cache.locked()
-
 
         self.__output['worker_runtime']         = time.time() - start
         self.__output['size_of_work']           = sworkload
-        self.__output['tasks_runtime']          = ttmp - self.__job.cache.time
+        self.__output['tasks_runtime']          = ttmp
+        self.__output['wait_runtime']           = twait
+        self.__output['cache_runtime']          = self.__job.cache.time
         self.__output['times']                  = self.__job.times
         self.__output['size_of_cache']          = self.__job.cache.size()
         self.__output['number_of_rules']        = self.__job.cache.get_missing()
         self.__output['number_of_hits']         = self.__job.cache.get_hits()
         self.__output['cache_memory_usage']     = self.__job.cache.get_capacity_in_bytes()
         
-        
         print('[INFO]: Worker ',self.__id_worker, ' Finished with ', self.__output['size_of_work'], ' tasks processed and,', self.__job.cache.size(),' rules cached') if self.__isverbose else None
         print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_hits(), ' hits and ', self.__job.cache.get_missing(),' missing') if self.__isverbose else None
         print('[INFO]: Worker ',self.__id_worker,' Finalized in ', self.__output['worker_runtime'], ' secs.') if self.__isverbose else None
-
+        print('[INFO]: Worker ',self.__id_worker,' Finalized with ', self.__job.cache.get_capacity_in_bytes(), ' cache size in memory.') if self.__isverbose else None
+        
         self.__output['general_runtime'] = time.time() - start
         output = {self.__id_worker:{self.__id_worker:self.__output}}
         self.__global_queue_results.put(output, self.__id_worker)
@@ -163,7 +167,7 @@ class BaseWorker:
         output = self.__output_path + app+'_'+tcache+'_'+'w'+str(self.__id_worker)+'_'+md+'.csv'
         with open(output, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=' ')
-            writer.writerow(['---------------------> ' + self.__name_scheduler + ' SCHEDULLER, CACHE WITH ' + str(self.__cache.capacity) + ' TASKS AND CHUNK OF ('+str(self.__workload.overview['chunk'])+') -----------------'])
+            writer.writerow(['---------------------> ' + self.__name_scheduler + ' SCHEDULLER, CACHE WITH ' + str(self.__cache.capacity) + ' TASKS, CHUNK OF ('+str(self.__workload.overview['chunk'])+') AND BUCKETS OF ('+str(self.__workload.overview['bucket'])+') -----------------'])
             for key, value in self.__task_similarity.items():
                 ht1 = self.__bytask[key[0]][0]
                 rt1 = self.__bytask[key[0]][1]
@@ -171,7 +175,7 @@ class BaseWorker:
                 ht2 = self.__bytask[key[1]][0]
                 rt2 = self.__bytask[key[1]][1]
                 te2 = self.__bytask[key[1]][2]
-                aux = {'t1':key[0], 't2':key[1], 't1_runtime':te1, 't2_runtime':te2, 'similar?':value[0], 'premature_discard':value[1][0], 'discarded':value[1][1], 'used':value[1][2], 'hits_t1':ht1, 'rules_t1':rt1, 'hits_t2':ht2, 'rules_t2':rt2}
+                aux = {'t1':key[0], 't2':key[1], 't1_runtime':te1, 't2_runtime':te2, 'similar?':value[0], 'premature_discard':value[1][0], 'discarded':value[1][1], 'used':value[1][2], 'memory_reused':value[1][3], 'memory_needed':value[1][4], 'hits_t1':ht1, 'rules_t1':rt1, 'hits_t2':ht2, 'rules_t2':rt2}
                 writer.writerow([aux])
             writer.writerow(['#'])
             

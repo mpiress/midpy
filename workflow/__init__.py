@@ -28,11 +28,10 @@ import workflow
 from containers import constants
 from containers.wrapper.wrappers import NetworkWrapper, SchedulerWrapper, WorkloadWrrapper, CacheWrapper
 
+from core.network.pipes import lookup
 from core import WorkflowManager
 
-import socket, os, shutil
-
-from schedulers.batch.round_robin import RoundRobin
+import socket, os, shutil, time
 
 __local_path__ = workflow.__path__[0] + os.sep
 
@@ -66,9 +65,10 @@ class WorkflowInitialize:
     def get_scheduller_wrapper(self):
         return self.scheduler
 
-    def set_scheduller_wrapper(self, schell=None):
+    def set_scheduller_wrapper(self, schell=None, sigsize=1):
         assert schell, '[ERROR]: similarity metric is not defined'
         self.scheduler.type_scheduler = schell
+        self.scheduler.sig_size       = sigsize
         
 
     ###############################################################################################################
@@ -103,7 +103,7 @@ class WorkflowInitialize:
     ###############################################################################################################
     def __change_execution_mode(self, schel, capacity, config):
         
-        if schel.__name__.lower() == "nnschellbysignature":
+        if schel.__name__.lower() == "nnschellbysignature1b" or schel.__name__.lower() == "nnschellbysignature5b":
             path = config.PATH_DATASET + "NeuralNetwork/" + config.BASE_FILE_NAME+'_' + str(config.NWORKERS)+"w"+str(capacity)+".csv"
             file = '/var/tmp/'+str(config.NWORKERS)+"w"+str(capacity)+".csv"
             shutil.copyfile(path, file)
@@ -114,7 +114,7 @@ class WorkflowInitialize:
     #                                           WORKFLOW INITIALIZATION                                           #
     ###############################################################################################################
 
-    def start_workflow_master(self, config, descriptor):
+    def start_workflow_master(self, config, descriptor, warmup):
         self.workflow = WorkflowManager()
                         
         assert config.OUTPUT_PATH, '[ERROR]: output is not defined correctly'
@@ -131,6 +131,7 @@ class WorkflowInitialize:
         config.TEST = file
 
         descriptor.set_path(config.TEST)
+        warmup.set_path(config.WARMUP)
         
         for cache_type in config.CACHE_TYPE:
             for schel in config.SCHEDULERS:
@@ -138,18 +139,23 @@ class WorkflowInitialize:
                     for capacity in config.CACHE_CAPACITY:
                         if constants.VERBOSEMODE:
                             print('================================================================================================')
-                            print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' metric')
+                            print('Starting the cache '+cache_type.__name__.lower()+' with size of '+str(capacity)+'GB and '+schel.__name__.lower()+' metric')
                             print('================================================================================================')
                         
-                        self.__change_execution_mode(schel, capacity, config)
+                        self.__change_execution_mode(schel, config.SIZE_OF_BUCKET, config)
 
                         self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)
-                        self.set_scheduller_wrapper(schel)
-                        mod = '#div' if config.MOD_OR_DIV_SCHELL else '#mod' 
+                        self.set_scheduller_wrapper(schel, config.CACHE_SIG_SIZE)
+                        mod = '#div' if constants.DIV else '#mod' 
                         output_path = [config.OUTPUT_PATH+config.BASE_FILE_NAME+'_'+cache_type.__name__.lower()+'_'+str(config.NWORKERS)+'_'+mod+'.csv', str(capacity)]
                         execution_id = (cache_type.__name__.lower(), schel.__name__.lower(), chunk, capacity)
-                        self.workflow.taskmanager_init(self.connection, self.workload, self.scheduler, descriptor, output_path, execution_id, constants.VERBOSEMODE)
+                        self.workflow.taskmanager_init(self.connection, self.workload, self.scheduler, descriptor, warmup, output_path, execution_id, constants.VERBOSEMODE)
                     
+        
+        semaphore = lookup(conn=self.connection, uri='global.queues.lookup_wids')
+        while semaphore.get_semaphore_sizeof(execution_id) < config.NWORKERS:
+            time.sleep(1)
+        
         self.workflow.shutdown_server_name(self.connection)
         
 
@@ -175,7 +181,7 @@ class WorkflowInitialize:
                         
                         if constants.VERBOSEMODE:
                             print('================================================================================================')
-                            print('Starting the cache '+cache_type.__name__.lower()+' with '+str(capacity)+' tasks cached and '+schel.__name__.lower()+' scheduller')
+                            print('Starting the cache '+cache_type.__name__.lower()+' with size of '+str(capacity)+'GB and '+schel.__name__.lower()+' scheduller')
                             print('================================================================================================')
                         
                         self.set_workload_wrapper(chunk, config.SIZE_OF_BUCKET, config.TRAIN_NEURAL_NETWORK, config.BASE_FILE_NAME)

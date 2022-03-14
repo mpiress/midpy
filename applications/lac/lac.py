@@ -29,7 +29,7 @@ from core.managers.worker import BaseWorkerInfo
 from utils import read_file
 from itertools import combinations
 
-import time
+import time, sys
 
 class LAC(BaseWorkerInfo):
 
@@ -40,9 +40,9 @@ class LAC(BaseWorkerInfo):
         self.__classes          = {}
         self.__features         = {}
         self.size_of_train      = 0
-        #self.idxtask            = 0
+        self.tasks              = 0
         self.__preprocessing(train)
-        
+
         
     def __preprocessing(self, train):
         data = []
@@ -56,82 +56,154 @@ class LAC(BaseWorkerInfo):
             
             key = str(line[-1])
             if key not in self.__classes:
-                self.__classes[key] = {index}
+                self.__classes[key] = [index]
             else:
-                self.__classes[key].add(index)
+                self.__classes[key].append(index)
             
             for key in line[0:-1]:
                 key = str(key)
                 if key not in self.__features:
-                    self.__features[key] = {index}
+                    self.__features[key] = [index]
                 else:
-                    self.__features[key].add(index)
+                    self.__features[key].append(index)
             print('[INFO] Load training data:', int(100*index/self.size_of_train),'%', end="\r")
         
-        #for k in self.__classes:
-        #    self.__classes[k] = sorted(self.__classes[k])
-        #for k in self.__features:
-        #    self.__features[k] = sorted(self.__features[k])
-
+        print()
         print("NUMERO DE FEATURES: " , len(self.__features))
+        print("NUMERO DE CLASSES : " , len(self.__classes))
         
 
-
-
-    def intersection(self, lst1, lst2):
-        lst3 = []
-        temp1 = set(lst2) if len(lst1) < len(lst2) else set(lst1)
-        temp2 = lst1 if len(lst1) < len(lst2) else lst2
-        lst3 = [value for value in temp2 if value in temp1]
-        return lst3
-
-    def __getRules(self, combination):
-        score     = {}
-        notcached = []
+    
+    def __get__support_and_confidence(self, classes, sizeof):
+        keys = list(classes.keys())
+        memory = 0
         
-        for c in combination:
-            rule = self.cache.get(c)
-            if rule == -1:
-                notcached.append(c)
+        for c in keys:
+            value = len(classes[c][2])
+            sup = value/self.size_of_train
+            if sup >= self.__minsup:
+                conf = value/sizeof
+                if conf >= self.__minconf:
+                    classes[c] = [sup, conf, classes[c][2]]
+                    memory += sys.getsizeof(sup)
+                    memory += sys.getsizeof(conf)
+                    memory += sys.getsizeof(classes[c][2])
+        
+        return memory
+        
+
+    def __get_matches(self, rule):
+        matched   = {}
+        sizeof    = len(rule)
+        matchsize = sizeof - 1
+        reuse = []
+        task  = []
+
+        while(len(matched) < sizeof and matchsize > 1):
+            tmp = list(combinations(rule, matchsize))
+            while(len(matched) < sizeof and tmp):
+                idx = tmp.pop(0)
+                if self.cache.iscached(idx):
+                    for f in idx:
+                        if f not in matched:
+                            matched[f] = idx
+            matchsize = matchsize - 1 
+        
+        for r in rule:
+            if r in matched:
+                reuse.append(matched[r])
             else:
-                for c, v in rule.items():
-                    score[c] = [score[c][0] + v[0], score[c][1] + v[1]] if c in score else [v[0], v[1]]
+                task.append(r)
         
-        del(combination)
-        
+        return reuse, task
+
+
+
+    def __getRules(self, combination, score):
+        task_memory = 0
+        memory = 0
+
         tx = time.time()
-        for rule in notcached:
+        for rule in combination:
             
-            aux = [self.__features[k] for k in rule]
-            l1 = set.intersection(*aux)
-            
-            if l1:
-                sizeof = len(l1)
-                aux = [(c, len(l1.intersection(t))) for c, t in self.__classes.items()]
-                eval = {}
-                for c, value in aux:
-                    if value > 0:
-                        sup = value/self.size_of_train
-                        if sup >= self.__minsup:
-                            conf = value/sizeof
-                            if conf >= self.__minconf:
-                                eval[c] = [sup, conf]
-                                score[c] = [score[c][0] + sup, score[c][1] + conf] if c in score else [sup, conf]
+            #step 1: find a same rule in the cache
+            classes = self.cache.get(rule, len(rule))
+            classes = classes[1] if classes != -1 else classes 
+
+            if classes == -1:
+
+                classes = {}
+                features = set()
+                memory = 0
+
+                #step 2: find segment rules 
+                reuse, task  = self.__get_matches(rule)
+                    
+                #step 2.1: process reuse into segment rules
+                if reuse:
+                    reuse = list(set(reuse))
+                    idx = reuse.pop(0)
+                    features, classes = self.cache.get(idx, len(idx))
+                    features = set(features)
+                    classes = {c:[0,0, set(classes[c][2])] for c in classes}
+                    while reuse and features and classes:
+                        idx = reuse.pop(0)
+                        f, c = self.cache.get(idx, len(idx))
+                        features = features.intersection(f)
+                        keys = set(classes.keys()).intersection(set(c.keys()))
+                        classes  = {k:[0,0,classes[k][2].intersection(c[k][2])] for k in keys}
+                        classes = {c:classes[c] for c in classes if len(classes[c][2]) > 0}
                 
-                if eval:
-                    self.cache.set(rule, eval)
-                        
+                    reuse = True
+                else:
+                    reuse = False
+
+                #step 2.2: evaluate task, i.e., rules not found into the cache
+                if task:
+                    
+                    if reuse and features and classes:
+                        l2 = [set(self.__features[idx]) for idx in task]
+                        features = features.intersection(*l2)
+                        classes = {c:[0,0, features.intersection(classes[c][2])] for c in classes.keys()}
+                        classes = {c:classes[c] for c in classes if len(classes[c][2]) > 0}
+                        #classes = {c:[0,0, len(features.intersection(set(self.__classes[c])))] for c in classes.keys()}
+
+                    elif not reuse:
+                        l2 = [set(self.__features[idx]) for idx in task]
+                        features = set.intersection(*l2)
+                        if features: 
+                            classes = {c:[0,0, features.intersection(val)] for c, val in self.__classes.items()}
+                            classes = {c:classes[c] for c in classes if len(classes[c][2]) > 0}
+                    
+                if features and classes:
+                    features = list(features)
+                    classes = {c:[0,0,list(classes[c][2])] for c in classes}
+                    memory += self.__get__support_and_confidence(classes, len(features))
+                    memory += sys.getsizeof(features)
+                else:
+                    features = []
+                    classes  = {}
+                
+                memory += sys.getsizeof(rule)
+                self.cache.set(rule, (features, classes), memory, len(rule)) 
+                
+            for c in classes:
+                score[c] = [score[c][0] + classes[c][0], score[c][1] + classes[c][1]] if c in score else [classes[c][0], classes[c][1]]  
+
+            task_memory += memory    
+        
         self.times['generate_rules'] = time.time() - tx if 'generate_rules' not in self.times else (self.times['generate_rules'] + (time.time() - tx))           
         
         #if you have that return results, using variable c
-        c = max(score.items(), key=lambda item:item[1][1]) 
+        c = max(score.items(), key=lambda item:item[1][1]) if score else None
         
-        return c
+        return c, task_memory
         
 
     def execute_task(self, task):
         result = 0
         itemset = []
+        score = {}
         
         task = [str(x) for x in enumerate(task[0:-1])]
         for k in task:
@@ -140,15 +212,14 @@ class LAC(BaseWorkerInfo):
         
         if len(itemset) > 0:
             combination = []
-            for size in range(1,self.__maxrule+1):
+            for size in range(1, self.__maxrule+1):
                 combination += list(combinations(itemset, size))
             
             t1 = time.time()
-            result = self.__getRules(combination)
+            result, memory = self.__getRules(combination, score)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
-            
-            #print("TEMPO DE EXECUÇÃO (", str(self.idxtask),"):", time.time() - t1)
-            #self.idxtask += 1
+            self.tasks += 1
+            print('[INFO]:Task:'+str(self.tasks)+' with time:'+str(time.time() - t1)+', '+str(len(combination))+' rules and '+str(memory)+' memory', end='\r')
 
         return result
         

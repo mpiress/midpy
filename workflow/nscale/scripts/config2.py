@@ -25,7 +25,6 @@
 
 """
 
-from containers import constants
 from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from cache.replacement_policies.lru import LRU
 from applications.nscale.nscale import NSCALE
@@ -41,24 +40,24 @@ class config:
     
     TEST                    = PATH_DATASET+'nscale.test'
     TRAIN                   = PATH_DATASET+'nscale.train'
-    OUTPUT_PATH             = '../../../results/nscale/'
+    WARMUP                  = PATH_DATASET+'nscale.warmup'
+    OUTPUT_PATH             = '../../../tmp/'
     
     SIZE_OF_CHUNK           = [2160]
     SIZE_OF_BUCKET          = 1
-    SCHEDULERS              = [NeighborhoodRank] 
-    MOD_OR_DIV_SCHELL       = constants.DIV
-
+    SCHEDULERS              = [NeighborhoodRank]
+    
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1, 2, 3, 4]
-    CACHE_DIV_WORKERS       = False
-
-    SERVER_PORT             = 32010
+    CACHE_CAPACITY          = [1.5, 2.0, 2.5]
+    CACHE_SIG_SIZE          = 1
+    
+    SERVER_PORT             = 32000
     NWORKERS                = 1
     WPOOL                   = 1
 
     def get_job(self):
-        file   = '/var/tmp/img4k.png'
-        origem =  '/home/michel/Doutorado/datasets/nscale/imgs/img4k.png'
+        file   = '/var/tmp/img5k.png'
+        origem =  '/home/michel/Doutorado/datasets/nscale/imgs/img5k.png'
         shutil.copyfile(origem, file)
         self.__job = NSCALE(file, '/var/tmp/output.png')
         return self.__job

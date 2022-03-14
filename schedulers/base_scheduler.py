@@ -25,24 +25,28 @@
 
 """
 from containers import constants
-from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 from multiprocessing.managers import BaseManager
 
 import math, csv
 
 class SchedulerManager(BaseManager):
     
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, workers_queues, descriptor, warmup_cache, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, workers_queues, descriptor, warmup, isverbose=True):
         self.descriptor         = descriptor
         self.descriptor.load()
 
+        self.warmup             = warmup
+        self.warmup.load()
+        
+
         self.conn               = conn
         self.workload           = workload
+        self.schell             = schell
         self.isverbose          = isverbose
         self.sizeof             = self.descriptor.sizeof()
         self.metrics            = {'schell_runtime':0, 'generate_train_nn':0, 'workload':self.sizeof, 'workload_wid':{wid:[] for wid in range(self.conn.nworkers)}}
         self.size_of_chunk      = workload.overview['chunk']
-        self.warmup             = warmup_cache
         self.__workers_queues   = workers_queues
         self.__dataindex        = 0
 
@@ -55,29 +59,15 @@ class SchedulerManager(BaseManager):
     
     def warmup_cache(self, sig=None):
         wid = 0
-        wpc = 0
-
-        if (self.conn.nworkers * self.warmup) > self.sizeof:
-            print("[ERROR]: CACHE WARM UP NOT EXECUTED BECAUSE THE DATASET SIZEOF IS SMALLER THAN SUCH A STAGE")
-            exit(1)
-
-        else:
-            while wid < self.conn.nworkers and self.__dataindex < self.sizeof:
-                tam = 0
-                while tam < self.warmup:
-                    query = self.descriptor.readline()
-                    query = [self.__dataindex, query]
-                    self.__dataindex += 1
-                    self.assign_tasks([query], self.workload.mod_or_div, wid)
-                    
-                    if sig != None and wid in sig:
-                        sig[wid][query[0]] = query[1]
-                    tam += 1
-                wid += 1
-                wpc += tam
-                
-        return wpc
-
+        
+        while wid < self.conn.nworkers: 
+            query = self.warmup.readline()
+            query = ['wup'+str(wid), query]
+            self.assign_tasks([query], self.workload.mod_or_div, wid)
+            if sig != None and wid in sig:
+                sig[wid][query[0]] = query[1]
+            wid += 1
+    
 
     def get_chunk(self):
         chunk = []

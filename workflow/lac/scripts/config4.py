@@ -27,11 +27,9 @@
 
 from containers import constants
 
-from schedulers.basedrn.nnschell_RR import  NNSCHELLBYSIGNATURE
+from schedulers.basedrn.nnschell_RR import NNSCHELLBYSIGNATURE5B
 from cache.replacement_policies.lru import LRU
 from applications.lac.lac import LAC
-
-import shutil
 
 class config:
     
@@ -42,23 +40,21 @@ class config:
     
     TEST                    = PATH_DATASET+'census.test'
     TRAIN                   = PATH_DATASET+'census.train'
+    WARMUP                  = PATH_DATASET+'census.warmup'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [1280] 
-    SIZE_OF_BUCKET          = 3
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE]
-    MOD_OR_DIV_SCHELL       = constants.DIV
-
+    SIZE_OF_CHUNK           = [2160] 
+    SIZE_OF_BUCKET          = 5
+    SCHEDULERS              = [NNSCHELLBYSIGNATURE5B]
+    
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1, 2, 3, 4] 
-    CACHE_DIV_WORKERS       = False
-
+    CACHE_CAPACITY          = [1.5, 2.0, 2.5]
+    CACHE_SIG_SIZE          = 1 
+    
     SERVER_PORT             = 32000
     NWORKERS                = 1
     WPOOL                   = 1
 
     def get_job(self):
-        file   = '/var/tmp/census.train'
-        shutil.copyfile(config.TRAIN, file)
-        self.__job = LAC(file, 4, 0, 0)
+        self.__job = LAC(config.TRAIN, 9, 0, 0)
         return self.__job

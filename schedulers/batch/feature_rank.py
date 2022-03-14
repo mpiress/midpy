@@ -26,13 +26,13 @@
 """
 
 from schedulers.base_scheduler import SchedulerManager
-from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 
 import time
 
 class FeatureRank(SchedulerManager):
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
         """!
         @brief Constructor of feature rank scheduler.
         @details Initializer is used for creating the Feature Rank scheduler manager based stratege presented on SBAC paper
@@ -44,7 +44,7 @@ class FeatureRank(SchedulerManager):
         @see base_scheduler
         """
         
-        super(FeatureRank, self).__init__(conn, workload, tasks, descriptor, isverbose)
+        super(FeatureRank, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
         
         if self.isverbose:
             print('[INFO]: executing feature ranking to task scheduling')

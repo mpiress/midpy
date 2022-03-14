@@ -27,7 +27,7 @@
 
 
 from schedulers.base_scheduler import SchedulerManager
-from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 
 import time
 
@@ -37,9 +37,9 @@ class RoundRobin(SchedulerManager):
     @brief Round Robin Scheduler Policy
     '''
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
         
-        super(RoundRobin, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
+        super(RoundRobin, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
         
         if self.isverbose:
             print('[INFO]: executing RoundRobin scheduler for ', self.sizeof ,' tasks')
@@ -51,7 +51,7 @@ class RoundRobin(SchedulerManager):
         workload = 0
 
         t1 = time.time()
-        workload += self.warmup_cache()
+        self.warmup_cache()
         self.metrics['schell_warmup_cache'] = time.time() - t1    
         
         t1 = time.time()

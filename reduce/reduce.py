@@ -54,7 +54,15 @@ class Reduce(BaseReduce):
                         elif item == 'tasks_runtime':
                             print('[INFO]: worker ', str(machine), ' with task runtime in ', str(data[machine][worker][item]))
                             writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with tasks runtime:' + str(data[machine][worker][item])])
+
+                        elif item == 'wait_runtime':
+                            print('[INFO]: worker ', str(machine), ' with wait task runtime in ', str(data[machine][worker][item]))
+                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with wait runtime:' + str(data[machine][worker][item])])
                         
+                        elif item == 'cache_runtime':
+                            print('[INFO]: worker ', str(machine), ' with cache runtime in ', str(data[machine][worker][item]))
+                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with cache runtime:' + str(data[machine][worker][item])])
+
                         elif item == 'number_of_rules':
                             writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' number of missing:' + str(data[machine][worker][item])])
                         
@@ -66,10 +74,13 @@ class Reduce(BaseReduce):
                         
                         elif item ==  'size_of_work':
                             writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with size of work:' + str(data[machine][worker][item])])
-                        
+                            
                         elif item ==  'size_of_cache':
                             writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with size_of_cache:' + str(data[machine][worker][item])])
                         
+                        elif item ==  'cache_memory_usage':
+                            writer.writerow(['Machine ' + str(machine) + ' Worker ' + str(worker) + ' with cache_memory_usage_in_bytes:' + str(data[machine][worker][item])])
+
                         elif item == 'times':    
                             #process execution time obtained of job process - design pattern in dictionary <key, value>
                             job_times = data[machine][worker][item]

@@ -28,9 +28,8 @@
 from core.managers.worker import BaseWorkerInfo
 
 import cv2
-import time
+import time, sys
 from ctypes import *
-import numpy as np
 import pbcvt
 
 
@@ -43,84 +42,119 @@ class NSCALE(BaseWorkerInfo):
     def __segmentNuclei(self, img, blue, green, red, T1, T2, G1, G2, minSize, maxSize, minSizePl, minSizeSeg, maxSizeSeg, fillHoles, recon, water):
         hits, missing = 0, 0
         s1, s2, s3, s4, s5, s6, s7 = 0,0,0,0,0,0,0 
-
-        rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,))
+        
+        rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,), 8)
         
         if rule == -1:
             missing += 1
 
             s1 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2,))
+            rule = self.cache.get((blue, green, red, T1, T2,), 1)
             if rule == -1:
                 missing += 1
                 rbc, bgr = pbcvt.segmentNucleiStg1Py(img, (blue, green, red, T1, T2,))
-                self.cache.set((blue, green, red, T1, T2,), [rbc, bgr])
+                memory = sys.getsizeof((blue, green, red, T1, T2,))
+                memory += sys.getsizeof(rbc)
+                memory += sys.getsizeof(rbc)
+                self.cache.set((blue, green, red, T1, T2,), [rbc, bgr], memory, 1)
+                
             else:
                 hits += 1
                 rbc, bgr = rule
             s1 = time.time() - s1
 
             s2 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2, recon,))
+            rule = self.cache.get((blue, green, red, T1, T2, recon,), 2)
             if rule == -1:
                 missing += 1
                 bgr, rc, rc_recon, rc_open = pbcvt.segmentNucleiStg2Py(bgr, (recon,))
-                self.cache.set((blue, green, red, T1, T2, recon,), [bgr, rc, rc_recon, rc_open])
+                memory = sys.getsizeof((blue, green, red, T1, T2, recon,))
+                memory += sys.getsizeof(bgr)
+                memory += sys.getsizeof(rc)
+                memory += sys.getsizeof(rc_recon)
+                memory += sys.getsizeof(rc_open)
+                self.cache.set((blue, green, red, T1, T2, recon,), [bgr, rc, rc_recon, rc_open], memory, 2)
+
             else:
                 hits += 1
                 bgr, rc, rc_recon, rc_open = rule
             s2 = time.time() - s2
             
             s3 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1,))
+            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1,), 3)
             if rule == -1:
                 missing += 1
                 rc, rc_recon, rc_open, bw1, diffIm  = pbcvt.segmentNucleiStg3Py([rc, rc_recon, rc_open], (fillHoles, G1,))
-                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1,), [rc, rc_recon, rc_open, bw1, diffIm])
+                memory = sys.getsizeof((blue, green, red, T1, T2, recon, fillHoles, G1,))
+                memory += sys.getsizeof(rc)
+                memory += sys.getsizeof(rc_recon)
+                memory += sys.getsizeof(rc_open)
+                memory += sys.getsizeof(bw1)
+                memory += sys.getsizeof(diffIm)
+                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1,), [rc, rc_recon, rc_open, bw1, diffIm], memory, 3)
+                    
             else:
                 hits += 1
                 rc, rc_recon, rc_open, bw1, diffIm = rule
             s3 = time.time() - s3
             
             s4 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize,))
+            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize,), 4)
             if rule == -1:
                 missing += 1
                 bw1, bw1_t = pbcvt.segmentNucleiStg4Py(bw1, (minSize, maxSize,))
-                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize,), [bw1, bw1_t])
+                memory = sys.getsizeof((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize,))
+                memory += sys.getsizeof(bw1)
+                memory += sys.getsizeof(bw1_t)
+                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize,), [bw1, bw1_t], memory, 4)
+                    
             else:
                 hits += 1
                 bw1, bw1_t = rule 
             s4 = time.time() - s4
 
             s5 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2,))
+            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2,), 5)
             if rule == -1:
                 missing += 1
                 diffIm, bw1_t, rbc, seg_open  = pbcvt.segmentNucleiStg5Py([diffIm, bw1_t, rbc], (G2,))
-                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, ), [diffIm, bw1_t, rbc, seg_open])
+                memory = sys.getsizeof((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2,))
+                memory += sys.getsizeof(diffIm)
+                memory += sys.getsizeof(bw1_t)
+                memory += sys.getsizeof(rbc)
+                memory += sys.getsizeof(seg_open)
+                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2,), [diffIm, bw1_t, rbc, seg_open], memory, 5)
+                
             else:
                 hits += 1
                 diffIm, bw1_t, rbc, seg_open = rule
             s5 = time.time() - s5
             
             s6 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water,))
+            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water,), 6)
             if rule == -1:
                 missing += 1
                 seg_open, seg_nonoverlap  = pbcvt.segmentNucleiStg6Py([img, seg_open], (minSizePl, water,))
-                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water,), [seg_open, seg_nonoverlap])
+                memory = sys.getsizeof((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water,))
+                memory += sys.getsizeof(seg_open)
+                memory += sys.getsizeof(seg_nonoverlap)
+                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water,), [seg_open, seg_nonoverlap], memory, 6)
+    
             else:
                 hits += 1
                 seg_open, seg_nonoverlap = rule
             s6 = time.time() - s6
 
             s7 = time.time()
-            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,))
+            rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,), 7)
             if rule == -1:
                 missing += 1
                 seg_nonoverlap, output  = pbcvt.segmentNucleiStg7Py(seg_nonoverlap, (minSizeSeg, maxSizeSeg, fillHoles,))
-                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,), [output])
+                memory = sys.getsizeof((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,))
+                memory += sys.getsizeof(seg_nonoverlap)
+                memory += sys.getsizeof(output)
+                self.cache.set((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,), [seg_nonoverlap, output], memory, 7)
+                
             else:
                 hits += 1
                 output = rule
@@ -128,10 +162,11 @@ class NSCALE(BaseWorkerInfo):
         
         else:
             hits += 1
-            output = rule
+            output = rule[1]
 
         #print('TEMPOS:: S1:', s1, ' S2:', s2, ' S3:', s3, ' S4:', s4, ' S5:', s5, ' S6:', s6, ' S7:', s7)
-        
+        #print("TEMPO:", s1+s2+s3+s4+s5+s6+s7)
+
         return [hits, missing, output]
 
     

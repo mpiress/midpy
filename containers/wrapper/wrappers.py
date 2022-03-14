@@ -43,6 +43,7 @@ class NetworkWrapper:
     
 class SchedulerWrapper:
     type_scheduler      = None
+    sig_size            = 1
     
       
 class CacheWrapper:

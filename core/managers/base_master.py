@@ -39,7 +39,7 @@ from containers import constants
 
 class BaseMaster():
     
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, isverbose):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, descriptor, warmup, isverbose):
         
         self.__workload = workload
         self.__schell = schell
@@ -47,6 +47,7 @@ class BaseMaster():
         self.__daemons = {}
         self.__conn = conn
         self.__descriptor = descriptor
+        self.__warmup     = warmup
         
         #remote objects
         self.__qresults         = ResultQueues(conn.nworkers)
@@ -68,9 +69,9 @@ class BaseMaster():
             name, daemon = obj_publisher(self.__workers_queues[wid], prefix, 'tasks'+str(wid), self.__conn)
             self.__daemons[name] = daemon
                 
-    def __start_scheduler(self, warmup_cache):
+    def __start_scheduler(self, sizeof_cache):
         print('[INFO]: prepare scheduler strategy') if self.__isverbose else None
-        dispatcher = Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, warmup_cache, self.__isverbose)
+        dispatcher = Orchestrator(self.__conn, self.__workload, self.__schell, self.__workers_queues, self.__descriptor, self.__warmup, self.__isverbose)
         print('[INFO]: Executing schedulling into input data set') if self.__isverbose else None
         dispatcher.schedulling()
         return dispatcher.get_metrics()
@@ -96,14 +97,15 @@ class BaseMaster():
             writer.writerow(['---------------------> ' + self.__schell.type_scheduler.__name__ + ' SCHEDULLER AND CACHE WITH ' + output[1] + ' TASKS -----------------'])
             writer.writerow(['CHUNK(' + str(self.__workload.overview['chunk']) + ')'])
             for m in metrics:
-                writer.writerow(['Scheduling ' + m + ':' + str(metrics[m])]) 
+                writer.writerow(['Scheduling ' + m + ':' + str(metrics[m])])
+            writer.writerow(['Scheduling task bucket size:' + str(self.__workload.overview['bucket'])]) 
 
     
-    def processing(self, output, warmup_cache):
+    def processing(self, output, sizeof_cache):
         reduce = Reduce(self.__conn)
 
         t1 = time.time()
-        metrics = self.__start_scheduler(warmup_cache)
+        metrics = self.__start_scheduler(sizeof_cache)
         self.generate_header(metrics, output) if not self.__workload.train_neural_network else None
         print('[INFO]: waiting for queries to be processed') if self.__isverbose else None
         

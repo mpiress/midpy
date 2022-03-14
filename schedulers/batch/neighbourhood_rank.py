@@ -25,7 +25,7 @@
 
 """
 from schedulers.base_scheduler import SchedulerManager
-from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper
+from containers.wrapper.wrappers import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 from threading import Thread
 from scipy.stats import poisson, norm
 from itertools import combinations, permutations
@@ -37,7 +37,7 @@ import time, math, random
 
 class NeighborhoodRank(SchedulerManager):
 
-    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, tasks, descriptor, warmup_cache=0, isverbose=True):
+    def __init__(self, conn:NetworkWrapper, workload:WorkloadWrrapper, schell:SchedulerWrapper, tasks, descriptor, warmup, isverbose=True):
         """!
         @brief Constructor of feature rank scheduler.
         @details Initializer is used for creating the Feature Rank scheduler manager based stratege presented on SBAC paper
@@ -49,7 +49,7 @@ class NeighborhoodRank(SchedulerManager):
         @see base_scheduler
         """
         
-        super(NeighborhoodRank, self).__init__(conn, workload, tasks, descriptor, warmup_cache, isverbose)
+        super(NeighborhoodRank, self).__init__(conn, workload, schell, tasks, descriptor, warmup,  isverbose)
         
         if self.isverbose:
             print('[INFO]: executing neighborhood rank for task scheduling')
@@ -98,7 +98,7 @@ class NeighborhoodRank(SchedulerManager):
         wid = 0
         
         t1 = time.time()
-        workload += self.warmup_cache()
+        self.warmup_cache()
         self.metrics['schell_warmup_cache'] = time.time() - t1    
         
         t1 = time.time()

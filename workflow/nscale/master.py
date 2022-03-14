@@ -41,6 +41,7 @@ if __name__ == '__main__':
     
     wf = WorkflowInitialize()
     descriptor = ReaderDescriptor()
-    wf.start_workflow_master(config, descriptor)
+    warmup     = ReaderDescriptor()
+    wf.start_workflow_master(config, descriptor, warmup)
     exit(0)
     

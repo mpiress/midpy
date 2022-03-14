@@ -55,15 +55,26 @@ class LookupWids:
 
     def __init__(self, nworkers, wpool):
         self.__wids         = {}
+        self.__semaphore    = []
         self.__nworkers     = nworkers
         self.__wpool        = wpool
         
     @Pyro4.expose
     def set(self, execution_id):
         self.__wids[execution_id] = Queue()
+        self.__semaphore = {execution_id: Queue()}
         [self.__wids[execution_id].put(wid) for wid in range(self.__nworkers)]
         [self.__wids[execution_id].put('EXIT') for _ in range(self.__wpool)]
-        
+
+    @Pyro4.expose
+    def set_semaphore(self, execution_id, wid):
+        if execution_id in self.__semaphore:
+            self.__semaphore[execution_id].put(wid)
+
+    @Pyro4.expose
+    def get_semaphore_sizeof(self, execution_id):
+        return self.__semaphore[execution_id].qsize()
+
     @Pyro4.expose
     def get(self, execution_id):
         if execution_id not in self.__wids or self.__wids[execution_id].empty():
