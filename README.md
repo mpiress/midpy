@@ -5,6 +5,7 @@ A Parallel and Distributed Framework Focused into Computing-Intensive Applicatio
 <div style="display: inline-block;">
 
 <img align="center" src="https://github.com/mpiress/midpy/blob/main/imgs/passing.svg"/> 
+<img align="center" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/> 
 
 </div>
 
