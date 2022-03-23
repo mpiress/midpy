@@ -18,3 +18,15 @@ In the proposed framework, executions are performed under a modular workflow. In
 - An intuitive workflow to introduces and evaluates novel task orchestrations
 - Independence from computational architecture and operating system to manage and execute multiple workers
 - Flexible structure for on-demand adaptations, enabling the study of different computational scenarios without changing the application execution model
+
+## Plugins
+
+## Development
+
+## Docker
+
+## License
+
+GPL
+
+Free Software!
