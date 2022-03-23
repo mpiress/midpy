@@ -14,11 +14,19 @@ In the proposed framework, executions are performed under a modular workflow. In
 ## Features
 
 <p align="justify">
-- Sequential and Parallel Executions Using Python and C/C++ For Applications Description </br>
-- Cache space evaluation for different replacement policies without modifications into execution and application </br>
-- An intuitive workflow to introduces and evaluates novel task orchestrations </br>
-- Independence from computational architecture and operating system to manage and execute multiple workers </br>
-- Flexible structure for on-demand adaptations, enabling the study of different computational scenarios without changing the application execution model </br>
+- Sequential and Parallel Executions Using Python and C/C++ For Applications Description 
+</p>
+<p align="justify">
+- Cache space evaluation for different replacement policies without modifications into execution and application 
+</p>
+<p align="justify">
+- An intuitive workflow to introduces and evaluates novel task orchestrations 
+</p>
+<p align="justify">
+- Independence from computational architecture and operating system to manage and execute multiple workers 
+</p>
+<p align="justify">
+- Flexible structure for on-demand adaptations, enabling the study of different computational scenarios without changing the application execution model
 </p>
 
 ## Plugins
