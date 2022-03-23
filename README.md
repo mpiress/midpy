@@ -5,8 +5,9 @@ A Parallel and Distributed Framework Focused into Computing-Intensive Applicatio
 <div style="display: inline-block;">
 
 <img align="center" src="https://github.com/mpiress/midpy/blob/main/imgs/passing.svg"/> 
-<img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white"/> 
-
+<img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Python-14354C?style=for-the-badge&logo=python&logoColor=white"/> 
+<img align="center" height="20px" width="80px" src="https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white"/> 
+<img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg"/> 
 </div>
 
 <p align="justify">
