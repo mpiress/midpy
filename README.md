@@ -7,7 +7,7 @@ A Parallel and Distributed Framework Focused into Computing-Intensive Applicatio
 <img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Python-14354C?style=for-the-badge&logo=python&logoColor=white"/> 
 <img align="center" height="20px" width="80px" src="https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white"/> 
 <img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg"/> 
-<img align="center" height="20px" width="80px" src="https://img.shields.io/github/license/mpiress/midpy.svg"/> 
+<img align="center" height="20px" width="80px" src="https://img.shields.io/github/license/mpiress/midpy.svg"/>[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues) 
 </div>
 
 <p> </p>
