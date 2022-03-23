@@ -1,8 +1,6 @@
 <h1 align="justify">
 A Parallel and Distributed Framework Focused into Computing-Intensive Applications For Partial Computation Reuse Estimation 
 </h1>
-]<p> </p>
-<p> </p>
 
 <div style="display: inline-block;">
 <img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg"/> 
