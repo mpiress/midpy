@@ -2,6 +2,8 @@
 A Parallel and Distributed Framework Focused into Computing-Intensive Applications For Partial Computation Reuse Estimation 
 </h1>
 
+[![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=mpiress)](https://github.com/anuraghazra/github-readme-stats)
+
 ![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/passing.svg)
 
 <p align="justify">
