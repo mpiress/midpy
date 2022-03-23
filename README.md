@@ -1,5 +1,5 @@
 <h1 align="justify">
-# A Parallel and Distributed Framework Focused into Computing-Intensive Applications For Partial Computation Reuse Estimation 
+A Parallel and Distributed Framework Focused into Computing-Intensive Applications For Partial Computation Reuse Estimation 
 </h1>
 
 ![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/passing.svg)
