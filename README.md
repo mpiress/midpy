@@ -1,5 +1,5 @@
 <h1 align="justify">
-A Parallel and Distributed Framework Focused into Computing-Intensive Applications For Partial Computation Reuse Estimation 
+A Parallel and Distributed Framework Focused on Computing-Intensive Applications For Partial Computation Reuse Estimation and Optimization
 </h1>
 
 <div style="display: inline-block;">
