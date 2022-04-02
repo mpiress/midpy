@@ -77,7 +77,7 @@ To compose executions according to the scheme presented in Figure 2, the dispatc
 
 ## Docker
 
-# Contatos
+## Contatos
 
 <div style="display: inline-block;">
 <a href="https://t.me/michelpires369">
