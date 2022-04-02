@@ -62,8 +62,19 @@ On each worker, ...
 
 ## Docker
 
-## License
+# Contatos
 
-GPL
+<div style="display: inline-block;">
+<a href="https://t.me/michelpires369">
+<img align="center" height="20px" width="90px" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/> 
+</a>
 
-## Contacts
+<a href="https://www.linkedin.com/in/michelpiressilva/">
+<img align="center" height="20px" width="90px" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"/>
+</a>
+
+</div>
+
+<a style="color:black" href="mailto:michel@cefetmg.br?subject=[GitHub]%20Source%20Dynamic%20Lists">
+✉️ <i>michel@cefetmg.br</i>
+</a>
