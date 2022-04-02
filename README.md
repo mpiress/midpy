@@ -30,15 +30,15 @@ In this framework, the applications mentioned above are performed through a work
 ![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/framework_workflow.png)
 
 <p align="justify">
-As observed in Figure 1, a series of stages to manipulate the input tasks into the dispatcher are introduced. These stages are structured as a workflow in which input tasks are organized into pre-defined chunk sizes, reordered based on an affinity strategy, and submitted to execution. As support, the dispatcher creates and manages temporary queues, and workers consume such queues in an on-demand manner, according to a relationship between queues and workers.
+As observed in Figure 1, a series of stages to manipulate the input tasks into the dispatcher is introduced. These stages are structured as a workflow in which input tasks are organized into pre-defined chunk sizes, reordered based on an affinity strategy, and submitted to execution. As support, the dispatcher creates and manages temporary queues, and workers consume such queues in an on-demand manner, according to the relationship between queues and workers, which is pre-established using unique identifiers.
 </p>
 
 <p align="justify">
-On each worker, cache space is instantiated to coordinate common partial computations. Each cache space is designed to use typical replacement policies, such as Least Recently Used (LRU), and it is defined in the wrappers, side by side with the applications' routine calls. Predefined configurations address how tasks are read, workers are executed, and which policy and cache size is adopted.
+On each worker, cache space is instantiated to coordinate common partial computations. Each cache space uses typical replacement policies, such as Least Recently Used (LRU), and it is defined in the wrappers, side by side with the applications' routine calls. Pre-defined configurations address how tasks are read, how workers are executed, and which policy and cache size are adopted.
 </p>
 
 <p align="justify">
-The dispatcher and worker poll workflow make the execution flexible, which favors observing the application's behavior for different numbers of workers and cache sizes. Towards such flexibility, we address the framework through the following abstractions: (i) user descriptors, (ii) application and resources, (iii) composites descriptors and (iv) kernel. Figure 2 reports the modularization introduced in the framework.
+The dispatcher and worker poll workflows make the execution flexible, which favors observing the application's behavior for different numbers of workers and cache sizes. Towards such flexibility, we address the framework through the following abstractions: (i) user descriptors, (ii) application and resources, (iii) composites descriptors and (iv) kernel. Figure 2 reports the modularization introduced in the framework.
 </p>
 
 <p align="center">
@@ -46,11 +46,11 @@ The dispatcher and worker poll workflow make the execution flexible, which favor
 </p>
 
 <p align="justify">
-According to support modularization (i.e., Figure 2), four components describe the general workflow structure. In <b>user descriptors</b> flexible patterns are provided, allowing the description on how input tasks are read/written and which application routines are called. In <b>composite</b>, abstract resources are introduced to manipulate and deploy task affinity strategies and cache replacement policies without modifying the execution process. In addition, the <b>reduce</b> component describes how results are composed based on the requirements of the application. The <b>application/resources</b> and <b>kernel</b> are static and unmodified modules.
+According to support modularization (i.e., Figure 2), four components describe the general workflow structure. In <b>user descriptors</b>, flexible patterns are provided, allowing the description of how input tasks are read/written and which application routines are called. The <b>composite</b>, abstract resources are introduced to manipulate and deploy task affinity strategies and cache replacement policies without modifying the execution process. In addition, the <b>reduce component</b> describes how results are composed based on the application's requirements. The <b>application/resources</b> and <b>kernel</b> are static and unmodified modules.
 </p>
 
 <p align="justify">
-To compose executions according to the scheme presented in Figure 2, the dispatcher extends the abstraction of the mapper, which instantiates an affinity optimizer to reorder tasks in <img src="https://render.githubusercontent.com/render/math?math=T"/>. Tasks in <img src="https://render.githubusercontent.com/render/math?math=T"/> are evaluated in batches with predefined fixed sizes and distributed for workers according to the the task optimizer policy. This distribution is balanced, allowing each worker to operate on chunks of tasks with similar sizes. 
+To compose executions according to the scheme presented in Figure 2, the dispatcher extends the abstraction of the mapper, which instantiates an affinity optimizer to reorder tasks in <img src="https://render.githubusercontent.com/render/math?math=T"/>. Tasks in <img src="https://render.githubusercontent.com/render/math?math=T"/> are evaluated in batches with pre-defined fixed sizes and distributed to workers according to the task optimizer policy. This distribution is balanced, allowing each worker to operate on chunks of tasks with similar sizes.
 </p>
 
 ## Features
