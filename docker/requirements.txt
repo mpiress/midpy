@@ -1,0 +1,12 @@
+tensorflow==2.5.0
+sklearn
+matplotlib==3.3.4
+numpy==1.19.5
+pandas==1.1.5
+networkx==2.5.1
+Pyro4==4.80
+scipy==1.5.4
+imbalanced-learn==0.8.0
+python-igraph==0.9.6
+opencv-python==4.5.3.56
+yellowbrick==1.3.post1
