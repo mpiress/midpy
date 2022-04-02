@@ -50,7 +50,7 @@ According to support modularization (i.e., Figure 2), four components describe t
 </p>
 
 <p align="justify">
-To compose executions according to the scheme presented in Figure 2, the dispatcher extends the abstraction of the mapper, which instantiates an affinity optimizer to reorder tasks in $T$. Tasks in $T$ are evaluated in batches with predefined fixed sizes and distributed for workers according to the the task optimizer policy. This distribution is balanced, allowing each worker to operate on chunks of tasks with similar sizes. 
+To compose executions according to the scheme presented in Figure 2, the dispatcher extends the abstraction of the mapper, which instantiates an affinity optimizer to reorder tasks in <img src="https://render.githubusercontent.com/render/math?math=T"/>. Tasks in <img src="https://render.githubusercontent.com/render/math?math=T"/> are evaluated in batches with predefined fixed sizes and distributed for workers according to the the task optimizer policy. This distribution is balanced, allowing each worker to operate on chunks of tasks with similar sizes. 
 </p>
 
 ## Features
