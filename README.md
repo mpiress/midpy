@@ -9,9 +9,8 @@ A Parallel and Distributed Framework Focused into Computing-Intensive Applicatio
 <img align="center" height="20px" width="80px" src="https://img.shields.io/badge/Made%20for-VSCode-1f425f.svg"/> 
 <a href="https://github.com/mpiress/midpy/issues">
 <img align="center" height="20px" width="90px" src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"/>
-
-<img align="center" height="20px" width="80px" src="https://badgen.net/badge/license/MIT/green"/>
 </a> 
+<img align="center" height="20px" width="80px" src="https://badgen.net/badge/license/MIT/green"/>
 </div>
 
 <p> </p>
