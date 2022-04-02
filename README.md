@@ -27,7 +27,7 @@ In this framework, the applications mentioned above are performed through a work
 <p> </p>
 <p> </p>
 
-![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/architecture.png)
+![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/framework_workflow.png)
 
 <p align="justify">
 As observed in Figure 1, a series of stages to manipulate the input tasks into the dispatcher are introduced. These stages are structured as a workflow in which input tasks are organized into pre-defined chunk sizes, reordered based on an affinity strategy, and submitted to execution. As support, the dispatcher creates and manages temporary queues, and workers consume such queues in an on-demand manner, according to a relationship between queues and workers.
@@ -47,7 +47,9 @@ The dispatcher and worker poll workflow make the execution flexible, which favor
 According to support modularization (i.e., Figure 2), four components describe the general workflow structure. In <b>user descriptors</b> flexible patterns are provided, allowing the description on how input tasks are read/written and which application routines are called. In <b>composite</b>, abstract resources are introduced to manipulate and deploy task affinity strategies and cache replacement policies without modifying the execution process. In addition, the <b>reduce</b> component describes how results are composed based on the requirements of the application. The <b>application/resources</b> and <b>kernel</b> are static and unmodified modules.
 </p>
 
-
+<p align="justify">
+To compose executions according to the scheme presented in Figure 2, the dispatcher extends the abstraction of the mapper, which instantiates an affinity optimizer to reorder tasks in $T$. Tasks in $T$ are evaluated in batches with predefined fixed sizes and distributed for workers according to the the task optimizer policy. This distribution is balanced, allowing each worker to operate on chunks of tasks with similar sizes. 
+</p>
 
 ## Features
 
