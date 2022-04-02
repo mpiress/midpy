@@ -34,11 +34,11 @@ As observed in Figure 1, a series of stages to manipulate the input tasks into t
 </p>
 
 <p align="justify">
-On each worker, cache space is instantiated to coordinate common partial computations. Each cache space is designed to use typical replacement policies, such as Least Recently Used (LRU), and it is defined into the wrappers, side by side with the applications' routine calls. Predefined configurations address how tasks are read, workers are executed, and which policy and cache size is adopted.
+On each worker, cache space is instantiated to coordinate common partial computations. Each cache space is designed to use typical replacement policies, such as Least Recently Used (LRU), and it is defined in the wrappers, side by side with the applications' routine calls. Predefined configurations address how tasks are read, workers are executed, and which policy and cache size is adopted.
 </p>
 
 <p align="justify">
-The dispatcher and worker poll workflow make the execution flexible, which favors observing the application's behavior for different numbers of workers and cache sizes. Towards such flexibility, we address the framework through the following abstractions: (i) user descriptors, (ii) application and resources, (iii) composites descriptors, and (iv) kernel. Figure 2 reports the modularization introduced in the framework.
+The dispatcher and worker poll workflow make the execution flexible, which favors observing the application's behavior for different numbers of workers and cache sizes. Towards such flexibility, we address the framework through the following abstractions: (i) user descriptors, (ii) application and resources, (iii) composites descriptors and (iv) kernel. Figure 2 reports the modularization introduced in the framework.
 </p>
 
 <p align="center">
