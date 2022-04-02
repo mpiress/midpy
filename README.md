@@ -41,7 +41,7 @@ On each worker, cache space is instantiated to coordinate common partial computa
 The dispatcher and worker poll workflow make the execution flexible, which favors observing the application's behavior for different numbers of workers and cache sizes. Towards such flexibility, we address the framework through the following abstractions: (i) user descriptors, (ii) application and resources, (iii) composites descriptors, and (iv) kernel. Figure 2 reports the modularization introduced in the framework.
 </p>
 
-<img src="https://github.com/mpiress/midpy/blob/main/imgs/modularization.png" width="100" height="100">
+<img src="https://github.com/mpiress/midpy/blob/main/imgs/modularization.png" width="80%" height="80%">
 
 
 <p align="justify">
