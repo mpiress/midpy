@@ -89,7 +89,7 @@ pip install -r requeriments.txt
 ## Development
 
 <p align="justify">
-The last version of the framework makes it possible to execute applications in Python, C, and C++. The applications developed in C and C++ should be adapted, using the boost python as reported <a src="https://www.boost.org/doc/libs/1_64_0/libs/python/doc/html/index.html">here</a>.  After adjustments made, the result of the compilation (i.e., the dot file so) should be saved in lib/x64 before execution. Furthermore, the user need to develop a wrapper, which it is saved in the applications folder.  Notice by examples available that such wrapper extends the BaseWorkerInfo, the framework library that links applications and workers' executions. 
+The last version of the framework makes it possible to execute applications in Python, C, and C++. The applications developed in C and C++ should be adapted, using the boost python as reported in python boost library <a href="https://www.boost.org/doc/libs/1_64_0/libs/python/doc/html/index.html">here</a>.  After adjustments made, the result of the compilation (i.e., the dot file so) should be saved in lib/x64 before execution. Furthermore, the user need to develop a wrapper, which it is saved in the applications folder.  Notice by examples available that such wrapper extends the BaseWorkerInfo, the framework library that links applications and workers' executions. 
 </p>
 
 ## Contatos
