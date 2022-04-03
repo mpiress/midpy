@@ -84,6 +84,7 @@ Because the framework performing in Python (version 3.x), there are some extensi
 
 ```python
 pip install -r requeriments.txt 
+```
 
 ## Development
 
