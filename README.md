@@ -89,7 +89,19 @@ pip install -r requeriments.txt
 ## Development
 
 <p align="justify">
-The last version of the framework makes it possible to execute applications in Python, C, and C++. The applications developed in C and C++ should be adapted, using the boost python as reported in python boost library <a href="https://www.boost.org/doc/libs/1_64_0/libs/python/doc/html/index.html">here</a>.  After adjustments made, the result of the compilation (i.e., the dot file so) should be saved in lib/x64 before execution. Furthermore, the user need to develop a wrapper, which it is saved in the applications folder.  Notice by examples available that such wrapper extends the BaseWorkerInfo, the framework library that links applications and workers' executions. 
+The last version of the framework makes it possible to execute applications in Python, C, and C++. The applications developed in C and C++ should be adapted, using the boost python as reported in python boost library <a href="https://www.boost.org/doc/libs/1_64_0/libs/python/doc/html/index.html">here</a>.  After adjustments made, the result of the compilation (i.e., the dot file so) should be saved in lib/x64 before execution. Furthermore, the user need to develop a wrapper, which it is saved in the applications folder.  Notice by examples available that such wrapper extends the <b>BaseWorkerInfo</b>, the core framework library that links applications and workers' executions. In addition to the method required by the applications, a function must be implemented according to the defined pattern. 
+</p>
+
+```python
+def execute_task(self, task):
+```
+
+<p align="justify">
+The execution function receives a task from the worker and performs the application methods. After the application method executions, the results are returned to the worker, which sends them to the dispatcher for acting in the reduce step, which can be modified as needed, rewriting them in the reduce folder. The final results are produced by the dispatcher, saving them by CSV files after each execution.
+</p>
+
+<p align="justify">
+Once the application and appropriate reduction model are defined, the executions are initiated through patterns described in the workflow  folder. In such a folder, ...  
 </p>
 
 ## Contatos
