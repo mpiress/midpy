@@ -77,6 +77,8 @@ To compose executions according to the scheme presented in Figure 2, the dispatc
 
 ## Docker
 
+In this framework, 
+
 ## Contatos
 
 <div style="display: inline-block;">
