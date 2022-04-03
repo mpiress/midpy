@@ -101,8 +101,9 @@ The execution function receives a task from the worker and performs the applicat
 </p>
 
 <p align="justify">
-Once the application and appropriate reduction model are defined, the executions are initiated through patterns described in the workflow  folder. In such a folder, ...  
+Once applications and reduction models are defined as needed, the executions are initiated through patterns described in the workflow folder. There are a master and worker.py and an internal folder for each application with necessary scripts. A config.py is defined to compose the experimental behavior in the inner folder. The test, training, and cache warm-up datasets are described in such a file. The scheduler strategy, the number of tasks by chunk, and cache behavior parameters are defined too as part of the definitions. Finally, information about server port, number of workers, and workers initialized by computational note (i.e., wpool) are described. Besides the config.py, a descriptor.py file deals with the rules used for reading and writing into datasets during the experiments.
 </p>
+
 
 ## Contatos
 
