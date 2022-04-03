@@ -71,13 +71,15 @@ To compose executions according to the scheme presented in Figure 2, the dispatc
 - Flexible structure for on-demand adaptations, enabling the study of different computational scenarios without changing the application execution model
 </p>
 
+## Docker
+
+<p align="justify">
+In this framework, the Python TensorFlow library is used to model a siamese neural network as an option to analyze similarities between tasks. So, in the last framework version, GPU support is needed for performance reasons. We provide a Dockerfile (i.e., folder docker into the project) to prepare a dispatcher computation environment quickly. In this Dockerfile, Python and GPU dependencies can be configured before execution. However, such an extension is not required if the computational environment is appropriately configured for that neural network model with Python. 
+</p>
+
 ## Plugins
 
 ## Development
-
-## Docker
-
-In this framework, 
 
 ## Contatos
 
