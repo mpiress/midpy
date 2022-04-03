@@ -78,6 +78,12 @@ In this framework, the Python TensorFlow library is used to model a siamese neur
 </p>
 
 ## Plugins
+<p align="justify">
+Because the framework performing in Python (version 3.x), there are some extension libraries are needed. The relationship of such libraries is reported into docker folder by the requeriments file. For updating Python to use there, is necessary executing above step:
+</p>
+
+```python
+pip install -r requeriments.txt 
 
 ## Development
 
