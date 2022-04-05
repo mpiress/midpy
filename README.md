@@ -21,7 +21,11 @@ In an essential class of compute-intensive applications, while a series of indep
 </p>
 
 <p align="justify">
-Although the applications mentioned earlier benefit from optimizations such as cache and parallel and distributed execution models, similar tasks should perform close to each other. Otherwise, each task's expressive partial computations lead to a reduction of optimizations capability. In addition, such optimizations require adjustments in applications and their execution model, which makes caching and parallel executions challenging to employ. To solve this challenge, in the proposed framework, the applications are performed using a workflow based on a dispatcher and a pool of workers model. Each worker operates wrappers classes that allow extending applications and a cache without modifying the application execution model. We explore the wrappers using specialized routines, which users deploy to describe the application's method calls and cache behavior. Thus, while the dispatcher automated computation reuse, the worker pool manages a series of workers according to the computational environment available, executing application replicas with cache support. Figure 1 shows an overview of the framework structure.
+Although the applications mentioned earlier benefit from optimizations such as cache and parallel and distributed execution models, similar tasks need to be performed close to each other. Otherwise, each task's broad set of partial computations can reduce optimization's capability. In addition, optimizations, as mentioned, require adjustments in applications and their execution model, which makes caching and parallel and distributed executions a challenge.
+</p>
+
+<p align="justify">
+In the proposed framework, applications are performed in a workflow based on a dispatcher and a pool of workers model to solve the above challenge. Each worker is executed through wrappers classes that allow extending the applications and a typical cache without modifying the application execution model. We explore the wrappers using specialized routines, which users deploy to describe the application's method calls and cache behavior. Thus, while the dispatcher automated computation reuse, the worker pool manages a series of workers according to the computational environment available, executing application replicas with cache support. Figure 1 shows an overview of the framework structure.
 </p>
 
 <p> </p>
