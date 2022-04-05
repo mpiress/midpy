@@ -17,11 +17,11 @@ A Parallel and Distributed Framework For Partial Computation Reuse Optimization 
 <p> </p>
 
 <p align="justify">
-In an essential class of compute-intensive applications, while a series of independent tasks are executed, a large number of partial computations are produced. In such a process, each task's partial computations extensively employ data input elements as part of their processing, making them costly. A typical optimization introduces a cache as support for similar tasks with common computations to reduce computational impacts with overlapped data input elements processing. Thus, partial computations with high overlap demand can be reused, which results in a considerable reduction in application execution time. Furthermore, such compute-intensive applications conduct cache optimization concurrently with parallel and distributed executions for performance reasons. 
+In an essential class of compute-intensive applications, while a series of independent tasks are executed, a large number of partial computations are produced. In such a process, each task's partial computations extensively employ data input elements as part of their processing, making them costly. A typical optimization introduces a cache as support for similar tasks with common computations to reduce computational impacts with overlapped data input elements processing. Thus, partial computations with high overlap demand can be reused, which results in a considerable reduction in application execution time. Furthermore, because compute-intensive applications operate in significant volumes of data input elements, it is common to observe cache optimization employed concurrently with parallel and distributed executions for performance reasons. 
 </p>
 
 <p align="justify">
-Although the applications mentioned earlier benefit from optimizations such as cache and parallel and distributed execution models, similar tasks need to be performed close to each other. Otherwise, each task's broad set of partial computations can reduce optimization's capability. In addition, optimizations, as mentioned, require adjustments in applications and their execution model, which makes caching and parallel and distributed executions a challenge.
+Although the aforementioned applications benefit from optimizations such as cache and parallel and distributed execution models, similar tasks need to be performed close to each other. Otherwise, each task's broad set of partial computations can reduce optimization's capability. In addition, optimizations, as mentioned, require application adjustments in their execution model, which makes strategies such as cache and parallel and distributed execution models a challenge.
 </p>
 
 <p align="justify">
