@@ -25,7 +25,7 @@ Although the aforementioned applications benefit from optimizations such as cach
 </p>
 
 <p align="justify">
-In the proposed framework, applications are performed in a workflow based on a dispatcher and a pool of workers model to solve the above challenge. Each worker is executed through wrappers classes that allow extending the applications and a typical cache without modifying the application execution model. We explore the wrappers using specialized routines, which users deploy to describe the application's method calls and cache behavior. Thus, while the dispatcher automated computation reuse, the worker pool manages a series of workers according to the computational environment available, executing application replicas with cache support. Figure 1 shows an overview of the framework structure.
+This framework introduces compute-intensive applications as part of a workflow in which a dispatcher and a pool of workers manage executions. In such an execution model, each worker is designed using wrappers classes that allow extending both implementations and typical caches without modifying the application structure. We explore the wrappers classes using specialized routines signatures, which users extend to describe the application's method calls and cache behavior. Thus, while the dispatcher automated computation reuse, the worker pool manages a series of workers according to the computational environment available, executing application replicas with cache support. Figure 1 shows an overview of the framework structure.
 </p>
 
 <p> </p>
