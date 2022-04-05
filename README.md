@@ -17,7 +17,7 @@ A Parallel and Distributed Framework For Partial Computation Reuse Optimization 
 <p> </p>
 
 <p align="justify">
-In an essential class of compute-intensive applications, while a series of independent tasks are executed, a large number of partial computations are performed. In such a process, each task's partial computations extensively employ data input elements as part of their processing, making them costly. To reduce computational impacts with overlapped data input elements processing, a typical optimization introduces a cache as support for similar tasks with common computations. Thus, costly partial computations with high overlap can be reused, which leads to a considerable reduction in application execution time. Furthermore, it is common for such compute-intensive applications to conduct cache optimization concurrently with parallel and distributed executions for performance reasons. 
+In an essential class of compute-intensive applications, while a series of independent tasks are executed, a large number of partial computations are produced. In such a process, each task's partial computations extensively employ data input elements as part of their processing, making them costly. A typical optimization introduces a cache as support for similar tasks with common computations to reduce computational impacts with overlapped data input elements processing. Thus, partial computations with high overlap can be reused, which leads to a considerable reduction in application execution time. Furthermore, it is common to observe such compute-intensive applications conduct cache optimization concurrently with parallel and distributed executions for performance reasons. 
 </p>
 
 <p align="justify">
