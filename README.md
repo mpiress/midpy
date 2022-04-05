@@ -21,7 +21,7 @@ In an essential class of compute-intensive applications, while a series of indep
 </p>
 
 <p align="justify">
-Although the aforementioned applications benefit from optimizations such as cache and parallel and distributed execution models, similar tasks need to be performed close to each other. Otherwise, each task's broad set of partial computations can reduce optimization's capability. In addition, optimizations, as mentioned, require application adjustments in their execution model, which makes strategies such as cache and parallel and distributed execution models a challenge.
+Although the aforementioned applications benefit from optimizations such as cache and parallel and distributed execution models, similar tasks need to be performed close to each other. Otherwise, each task's vast number of partial computations can reduce optimization's capability. In addition, optimizations, as mentioned, require application adjustments in their execution model, which makes strategies such as cache and parallel and distributed execution models a challenge.
 </p>
 
 <p align="justify">
