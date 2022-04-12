@@ -1,5 +1,5 @@
 <h1 align="justify">
-A Parallel and Distributed Framework For Partial Computation Reuse Focused on Computing-intensive Applications
+A Parallel and Distributed Framework For Partial Computation Reuse Focused on Computing-Intensive Applications
 </h1>
 
 <div style="display: inline-block;">
@@ -34,7 +34,7 @@ In this framework, compute-intensive applications are performed through a workfl
 ![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/framework_workflow.png)
 
 <p align="justify">
-As observed in Figure 1, the dispatcher introduces steps to coordinate the input tasks. The input tasks are structured in chunks with pre-defined sizes, and they are submitted for a high-affinity partial computations selector stage to discover task similarity degrees. The similarity degrees are employed to rank tasks according to the number of workers and the distribution pré-defined rules. While the dispatcher organizes the execution by creating and managing temporary queues, workers consume them on-demand according to an identifier distribution method that relates workers, tasks, and partial computations cached.
+As observed in Figure 1, the dispatcher introduces steps to coordinate the input tasks. The input tasks are structured in chunks with pre-defined sizes, and they are submitted for a high-affinity partial computations selector stage to discover task similarity degrees. The similarity degrees are employed to rank tasks according to the number of workers and the distribution pré-defined rules. While the dispatcher organizes the execution by creating and managing temporary queues, workers consume them on-demand according to an identifier distribution method for relates workers, tasks, and partial computations cached.
 </p>
 
 <p align="justify">
