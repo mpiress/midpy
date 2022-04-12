@@ -34,7 +34,7 @@ In this framework, compute-intensive applications are performed through a workfl
 ![Build Status](https://github.com/mpiress/midpy/blob/main/imgs/framework_workflow.png)
 
 <p align="justify">
-As observed in Figure 1, steps are performed in the dispatcher to coordinate the input tasks. Firstly, the input tasks are organized into chunks with pre-defined sizes, performed sequentially in the next stage to achieve high-affinity partial computations between tasks. The result of a high-affinity selector is sent to execution according to the number of workers, considering task distribution rules defined in the selector stage. As support, the dispatcher creates and manages temporary queues. According to the relationship between queues and workers, workers consume such queues in an on-demand manner, which is pre-established using unique identifiers.
+As observed in Figure 1, the dispatcher introduces steps to coordinate the input tasks. The input tasks are organized into chunks with pre-defined sizes, introduced into a high-affinity partial computations selector stage. The selector results are ranked and executed according to the number of workers and the task distribution pré-defined rules. Further, the dispatcher creates and manages temporary queues. According to the relationship between queues and workers, workers' queue consumption is on-demand, and unique identifiers are used to identify the relationship between queues and workers.
 </p>
 
 <p align="justify">
