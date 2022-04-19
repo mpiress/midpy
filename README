@@ -1,3 +1,4 @@
+
 To execute MidPy architecture, you must have installed:
 	1 - PyDev for eclipse - http://www.vogella.com/tutorials/Python/article.html
 	2 - numpy (http://www.numpy.org/):  pip install numpy
