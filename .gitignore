@@ -25,3 +25,6 @@ utils/__pycache__/
 workflow/__pycache__/
 workflow/lac/__pycache__/
 workflow/nscale/__pycache__/
+workflow/lac/buffer/server.csv
+workflow/nscale/buffer/server.csv
+clear_all.sh
