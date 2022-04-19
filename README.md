@@ -17,7 +17,7 @@ A Parallel and Distributed Framework For Partial Computation Reuse Focused on Co
 <p> </p>
 
 <p align="justify">
-In an essential class of compute-intensive applications, while a series of independent tasks are executed, a large number of partial computations are produced. In such a process, each task's partial computations employ data input elements extensively, making processing costly. A typical optimization introduces a cache as support for similar tasks with common computations to reduce computational impacts under overlapped data input elements processing. Thus, partial computations with high overlap demand can be reused, which results in a considerable reduction in application execution time. Furthermore, because compute-intensive applications operate in significant volumes of data input elements, it is common to observe cache optimization employed concurrently with parallel and distributed models for performance reasons. 
+In an essential class of compute-intensive applications, while a series of independent tasks are executed, a large number of partial computations are produced. In such a context, partial computations use data input elements extensively, making processing costly. A typical optimization introduces a cache as support for similar tasks with common computations to reduce computational impacts under overlapped data input elements processing. Thus, partial computations with high overlap demand can be reused, which results in a considerable reduction in application execution time. Furthermore, because compute-intensive applications operate in significant volumes of data input elements, it is common to observe cache optimization employed concurrently with parallel and distributed models for performance reasons. 
 </p>
 
 <p align="justify">
@@ -38,7 +38,7 @@ As observed in Figure 1, the dispatcher introduces steps to coordinate the input
 </p>
 
 <p align="justify">
-On each worker, cache space is instantiated to coordinate common partial computations. Each cache space uses typical replacement policies, such as Least Recently Used (LRU), and it is defined in the wrappers, side by side with the applications' routine calls. Pre-defined configurations address how tasks are read, how workers are executed, and which policy and cache size are adopted.
+On each worker, a cache space is provided and it is instantiated to coordinate common partial computations. Each cache adopt typical replacement policies, such as Least Recently Used (LRU), which are defined based on wrappers, side by side with the applications' routine calls. Pre-defined configurations address how tasks are read, how workers are executed, and which policy and cache size are adopted.
 </p>
 
 <p align="justify">

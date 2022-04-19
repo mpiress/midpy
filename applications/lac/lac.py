@@ -93,11 +93,11 @@ class LAC(BaseWorkerInfo):
         
 
     def __get_matches(self, rule):
-        matched   = {}
-        sizeof    = len(rule)
-        matchsize = sizeof - 1
-        reuse = []
-        task  = []
+        matched    = {}
+        sizeof     = len(rule)
+        matchsize  = sizeof - 1
+        reuse      = []
+        task       = []
 
         while(len(matched) < sizeof and matchsize > 1):
             tmp = list(combinations(rule, matchsize))
@@ -138,7 +138,7 @@ class LAC(BaseWorkerInfo):
 
                 #step 2: find segment rules 
                 reuse, task  = self.__get_matches(rule)
-                    
+                  
                 #step 2.1: process reuse into segment rules
                 if reuse:
                     reuse = list(set(reuse))
@@ -166,8 +166,7 @@ class LAC(BaseWorkerInfo):
                         features = features.intersection(*l2)
                         classes = {c:[0,0, features.intersection(classes[c][2])] for c in classes.keys()}
                         classes = {c:classes[c] for c in classes if len(classes[c][2]) > 0}
-                        #classes = {c:[0,0, len(features.intersection(set(self.__classes[c])))] for c in classes.keys()}
-
+                        
                     elif not reuse:
                         l2 = [set(self.__features[idx]) for idx in task]
                         features = set.intersection(*l2)
@@ -219,8 +218,7 @@ class LAC(BaseWorkerInfo):
             result, memory = self.__getRules(combination, score)
             self.times['function_get_rules'] = time.time() - t1 if 'function_get_rules' not in self.times else self.times['function_get_rules'] + (time.time() - t1)
             self.tasks += 1
-            print('[INFO]:Task:'+str(self.tasks)+' with time:'+str(time.time() - t1)+', '+str(len(combination))+' rules and '+str(memory)+' memory', end='\r')
-
+            
         return result
         
 
