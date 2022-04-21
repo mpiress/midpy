@@ -38,6 +38,7 @@ class Cache:
         self.missing            = 0
         self.time               = 0
         self.capacity_in_bytes  = 0.0
+        self.verbose            = True
         self.max_capacity       = float(constants.MEMORY_UNIT * capacity)
         print("[INFO]: cache start with size of ", self.max_capacity, " Bytes")
 

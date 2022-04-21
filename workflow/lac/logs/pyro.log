@@ -262,3 +262,16 @@
 [2022-04-18 18:25:42.377,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
 [2022-04-18 18:30:13.249,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
 [2022-04-18 18:45:58.570,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 16:11:02.486,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 16:18:52.795,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 16:36:52.085,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 16:57:48.897,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 17:01:55.204,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 17:37:07.532,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 17:52:36.322,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 18:02:53.319,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 18:08:24.525,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 18:15:41.059,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 18:35:51.265,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-19 18:43:51.737,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
+[2022-04-20 14:28:28.784,Pyro4.core,ERROR] cannot connect to ('127.0.1.1', 32000): [Errno 111] Conexão recusada
