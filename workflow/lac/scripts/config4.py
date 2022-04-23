@@ -56,5 +56,5 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = LAC(config.TRAIN, 9, 0, 0)
+        self.__job = LAC(config.TRAIN, 5, 0, 0)
         return self.__job
