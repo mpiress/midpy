@@ -56,8 +56,5 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        file   = '/var/tmp/img5k.png'
-        origem =  '/home/michel/Doutorado/datasets/nscale/imgs/img5k.png'
-        shutil.copyfile(origem, file)
-        self.__job = NSCALE(file, '/var/tmp/output.png')
+        self.__job = NSCALE("../imgs/img5k.png", '../imgs/output.png')
         return self.__job

@@ -39,13 +39,13 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census_tiny.test'
+    TEST                    = PATH_DATASET+'census.test'
     TRAIN                   = PATH_DATASET+'census.train'
     WARMUP                  = PATH_DATASET+'census.warmup'
     OUTPUT_PATH             = '../../../tmp/'
     
     SIZE_OF_CHUNK           = [100]
-    SIZE_OF_BUCKET          = 1
+    SIZE_OF_BUCKET          = 5
     SCHEDULERS              = [NNSCHELLBYSIGNATURE, RoundRobin]
     
     CACHE_TYPE              = [LRU]
