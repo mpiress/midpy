@@ -95,11 +95,12 @@ class LAC(BaseWorkerInfo):
     def __get_matches(self, rule):
         matched    = {}
         sizeof     = len(rule)
-        matchsize  = sizeof - 1
+        matchsize  = sizeof - 1 if (sizeof - 1) > 0 else 0
         reuse      = []
         task       = []
 
         while(len(matched) < sizeof and matchsize > 1):
+        #if (matchsize > 1):
             tmp = list(combinations(rule, matchsize))
             while(len(matched) < sizeof and tmp):
                 idx = tmp.pop(0)
@@ -138,7 +139,8 @@ class LAC(BaseWorkerInfo):
 
                 #step 2: find segment rules 
                 reuse, task  = self.__get_matches(rule)
-                  
+                #reuse = []
+                #task = rule
                 #step 2.1: process reuse into segment rules
                 if reuse:
                     reuse = list(set(reuse))

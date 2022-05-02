@@ -44,12 +44,12 @@ class config:
     WARMUP                  = PATH_DATASET+'census.warmup'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [100]
-    SIZE_OF_BUCKET          = 5
+    SIZE_OF_CHUNK           = [2160]
+    SIZE_OF_BUCKET          = 1
     SCHEDULERS              = [NNSCHELLBYSIGNATURE, RoundRobin]
     
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1.5]
+    CACHE_CAPACITY          = [1.75]
     CACHE_SIG_SIZE          = 1
     
     SERVER_PORT             = 32000

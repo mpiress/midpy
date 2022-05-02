@@ -1,0 +1,13 @@
+tensorflow
+sklearn
+matplotlib
+numpy
+pandas
+networkx
+Pyro4
+scipy
+imbalanced-learn
+python-igraph
+opencv-python
+yellowbrick
+seaborn
