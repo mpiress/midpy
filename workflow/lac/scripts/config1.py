@@ -48,7 +48,7 @@ class config:
     SCHEDULERS              = [RoundRobin]
     
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1.5, 2.0, 2.5]
+    CACHE_CAPACITY          = [1.75, 2.0, 2.25]
     CACHE_SIG_SIZE          = 1 
     
     SERVER_PORT             = 32000
