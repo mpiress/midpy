@@ -56,5 +56,5 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = NSCALE("../imgs/img5k.png", '../imgs/output.png')
+        self.__job = NSCALE("imgs/img5k.png", 'imgs/output.png')
         return self.__job

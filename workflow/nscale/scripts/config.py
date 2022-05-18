@@ -25,7 +25,7 @@
 
 """
 
-from schedulers.basedrn.nnschell_RR import NNSCHELLBYSIGNATURE1B
+from schedulers.batch.round_robin import RoundRobin
 from cache.replacement_policies.lru import LRU
 from applications.nscale.nscale import NSCALE
 
@@ -45,10 +45,10 @@ class config:
     
     SIZE_OF_CHUNK           = [2160]
     SIZE_OF_BUCKET          = 1
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE1B]
+    SCHEDULERS              = [RoundRobin]
     
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1.5, 2.0, 2.5]
+    CACHE_CAPACITY          = [1.75, 2.0, 2.25, 2.5]
     CACHE_SIG_SIZE          = 1
     
     SERVER_PORT             = 32000
@@ -56,5 +56,5 @@ class config:
     WPOOL                   = 1
 
     def get_job(self):
-        self.__job = NSCALE("../imgs/img5k.png", '../imgs/output.png')
+        self.__job = NSCALE("imgs/img5k.png", 'imgs/output.png')
         return self.__job
