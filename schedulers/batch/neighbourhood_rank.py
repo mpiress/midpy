@@ -59,7 +59,7 @@ class NeighborhoodRank(SchedulerManager):
         self.__times = {'Graph':0, 'PageRank':0, 'Eval':0}
     
     
-    def __evaluated_model(self, dataset, inputset):
+    def evaluated_model(self, dataset, inputset):
         edges = []
         codec = {}
         code = 0
@@ -84,11 +84,9 @@ class NeighborhoodRank(SchedulerManager):
         for index, query in dataset:
             tmp = 0
             q = [codec[v] for v in enumerate(query)]
-            #q = list(enumerate(query))
             edges = permutations(q, 2)
-            #edges = [(codec[q[i]], codec[q[i+1]]) for i in range(len(q)-1)] + [(codec[q[-1]], codec[q[0]])]
             for e1, e2 in edges:
-                tmp += (attr_count[e1] + attr_count[e2])#/min(attr_count[codec[e1]], attr_count[codec[e2]]) 
+                tmp += (attr_count[e1] + attr_count[e2])
             inputset.append((index, query, tmp))
         self.__times['Eval'] += time.time() - t1
         
@@ -108,7 +106,7 @@ class NeighborhoodRank(SchedulerManager):
             sizeof = min(self.workload.overview['chunk'], self.sizeof - workload)
             workload += len(chunk)
             
-            self.__evaluated_model(chunk, inputset)
+            self.evaluated_model(chunk, inputset)
             data = list(map(lambda x: [x[0], x[1]], sorted(inputset, key=lambda x: x[2], reverse=True)))
             self.assign_tasks(data, div)
         

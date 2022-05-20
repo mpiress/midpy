@@ -44,7 +44,8 @@ class NSCALE(BaseWorkerInfo):
         s1, s2, s3, s4, s5, s6, s7 = 0,0,0,0,0,0,0 
         
         rule = self.cache.get((blue, green, red, T1, T2, recon, fillHoles, G1, minSize, maxSize, G2, minSizePl, water, minSizeSeg, maxSizeSeg,), 8)
-        
+        print(img)
+        exit(1)
         if rule == -1:
             missing += 1
 

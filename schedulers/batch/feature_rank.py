@@ -89,7 +89,9 @@ class FeatureRank(SchedulerManager):
         """
         workload = 0 
         
-        self.get_all_tasks()
+        t1 = time.time()
+        self.warmup_cache()
+        self.metrics['schell_warmup_cache'] = time.time() - t1 
         
         t1 = time.time()
         while workload < self.sizeof:

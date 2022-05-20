@@ -27,9 +27,12 @@
 def warn(*args, **kwargs):
     pass
 import warnings
+
+from sklearn import neighbors
 warnings.warn = warn
 
 from schedulers.base_scheduler import SchedulerManager
+from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from containers.wrapper.wrappers  import NetworkWrapper, WorkloadWrrapper, SchedulerWrapper
 
 from sklearn.cluster import KMeans
@@ -60,73 +63,11 @@ class KMeansRank(SchedulerManager):
         @see base_scheduler
         """
         super(KMeansRank, self).__init__(conn, workload, schell, tasks, descriptor, warmup, isverbose)
+        self.__neighbors = NeighborhoodRank(conn, workload, schell, tasks, descriptor, warmup, isverbose)
         
         if self.isverbose:
             print('[INFO]: executing KMeans scheduler to manage tasks')
         
-    
-    def __evaluated_by_NR(self, dataset, inputset):
-        data = []
-        edges = []
-        codec = {}
-        code = 0
-        for query in dataset:
-            query = list(enumerate(query[1]))
-            for v in query:
-                if v not in codec:
-                    codec[v] = code
-                    code += 1
-            edges += [(codec[query[i]], codec[query[i+1]]) for i in range(len(query)-1)] + [(codec[query[-1]], codec[query[0]])]
-        
-        G = Graph(edges)
-        attr_count = dict(enumerate(G.pagerank()))
-        
-        for index, query in dataset:
-            tmp = 0
-            q = list(enumerate(query))
-            edges = [(q[i], q[i+1]) for i in range(len(q)-1)] + [(q[-1], q[0])]
-            for e1,e2 in edges:
-                tmp += (attr_count[codec[e1]] + attr_count[codec[e2]])/min(attr_count[codec[e1]], attr_count[codec[e2]]) 
-            data.append((index, query, tmp))
-        
-        inputset += list(map(lambda x: [x[0],x[1]], sorted(data, key=lambda x:(x[2],x[1]), reverse=True)))
-
-    
-    def __evaluated_model_FR(self, dataset, inputset):
-        attr_count = {}
-        
-        for index, query in dataset:
-            for item in query:
-                attr_count[item] = 1 if item not in attr_count else attr_count[item] + 1
-             
-        tmp = []
-        for index, query in dataset:
-            tmp.append((index, query, sum([attr_count[k] for k in query])))
-        
-        inputset += list(map(lambda x: [x[0], x[1]], sorted(tmp, key=lambda x:(x[2],x[1]), reverse=True)))
-            
-    #estimate based in elbow curve 
-    def __elbow_method(self, inertia):
-        m = np.mean(inertia)
-        k =[(index+1, math.pow((point - m), 2)) for index, point in enumerate(inertia)]
-        k = sorted(k, key=lambda x:x[1])
-        return k[0][0]
-        
-    def __estimante_nclusters(self, dataset):
-        inertia = []
-        mmx = MinMaxScaler()
-        K = range(1, min(10, len(dataset)))
-        mmx.fit(dataset)
-        df = mmx.transform(dataset)
-        
-        for k in K:
-            kmeans = KMeans(n_clusters=k, precompute_distances=True, random_state=42).fit(df)
-            inertia.append(kmeans.inertia_)
-        
-        k = self.__elbow_method(inertia)
-        
-        return k
-            
     
     def __evaluated_model_KR(self, dataset, inputset):
         tmp = []
@@ -135,7 +76,7 @@ class KMeansRank(SchedulerManager):
             tmp.append([item[1] if isinstance(item, tuple) else item for item in query])
         df = pd.DataFrame(tmp)
         
-        nclusters = self.__estimante_nclusters(df)
+        nclusters = self.conn.nworkers
         kmeans = KMeans(n_clusters=nclusters, random_state=42).fit(df.values).labels_
         for q, k in zip(dataset, kmeans):
             if k not in inputset:
@@ -144,11 +85,6 @@ class KMeansRank(SchedulerManager):
                 inputset[k].append((q[0], q[1]))
             
                 
-    def __add_time(self, data, t1, t2):
-        for idx, _ in data:
-            self.waiting['dispatch'][idx] = t2 - t1
-            
-    
     def predict(self):
         """!
         @brief Method used to process queries according to KMeans scheduler policy
@@ -170,11 +106,17 @@ class KMeansRank(SchedulerManager):
                     ]
         """
         
+        print('[INFO]: assign', str(self.sizeof),'tasks for ',str(self.conn.nworkers),' worker(s)') if self.isverbose else None
+        
         workload = 0
         schell = 0
         
-        self.get_all_tasks()
-        
+        t1 = time.time()
+        self.warmup_cache()
+        self.metrics['schell_warmup_cache'] = time.time() - t1  
+
+
+        t1 = time.time()
         while workload < self.sizeof:
             inputset = {}
             
@@ -183,26 +125,17 @@ class KMeansRank(SchedulerManager):
             self.__evaluated_model_KR(chunk, inputset)
             
             data = []
-            for k in inputset:
-                self.__evaluated_model_FR(inputset[k], data)
-                #self.__evaluate_by_NR(inputset[k], data)
+            for w in inputset:
+                tasks = []
+                self.__neighbors.evaluated_model(inputset[w], tasks)
+                data += list(map(lambda x: [x[0], x[1]], sorted(tasks, key=lambda x: x[2], reverse=True)))
             
-            t1 = time.time()
-            self.assign_tasks(data, self.workload.dist_in_div)
-            t2 = time.time()
+            self.assign_tasks(data, self.workload.mod_or_div) 
             
-            schell += t2 - t1
-            
-            self.__add_time(data, t1, t2)
-        
-        del(inputset)
-        del(data)
-        
         self.set_exit()
-        
-        print('[INFO]: time expended for scheduling the tasks: ', schell) if self.isverbose else None
-        
-        return schell, self.waiting
+        self.metrics['schell_runtime'] = time.time() - t1
+
+        print('[INFO]: time expended for scheduling the tasks: ', self.metrics['schell_runtime']) if self.isverbose else None
     
     
     

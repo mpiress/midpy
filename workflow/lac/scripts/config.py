@@ -27,6 +27,9 @@
 
 from containers import constants
 
+from schedulers.batch.kmeans_rank import KMeansRank
+from schedulers.batch.feature_rank import FeatureRank
+from schedulers.batch.neighbourhood_rank import NeighborhoodRank
 from schedulers.basedrn.nnschell import NNSCHELLBYSIGNATURE
 from schedulers.batch.round_robin import RoundRobin
 from cache.replacement_policies.lru import LRU
@@ -39,17 +42,17 @@ class config:
 
     TRAIN_NEURAL_NETWORK    = False
     
-    TEST                    = PATH_DATASET+'census.test'
+    TEST                    = PATH_DATASET+'census_tiny.test'
     TRAIN                   = PATH_DATASET+'census.train'
     WARMUP                  = PATH_DATASET+'census.warmup'
     OUTPUT_PATH             = '../../../tmp/'
     
-    SIZE_OF_CHUNK           = [2160]
+    SIZE_OF_CHUNK           = [100]
     SIZE_OF_BUCKET          = 1
-    SCHEDULERS              = [NNSCHELLBYSIGNATURE, RoundRobin]
+    SCHEDULERS              = [KMeansRank] #[RoundRobin, FeatureRank, KMeansRank, NeighborhoodRank, NNSCHELLBYSIGNATURE]
     
     CACHE_TYPE              = [LRU]
-    CACHE_CAPACITY          = [1.75]
+    CACHE_CAPACITY          = [1.75, 2.0]
     CACHE_SIG_SIZE          = 1
     
     SERVER_PORT             = 32000
